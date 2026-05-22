@@ -1,7 +1,17 @@
+﻿using Microsoft.EntityFrameworkCore;
+using CMS.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+<<<<<<< Updated upstream
 builder.Services.AddRazorPages();
+=======
+builder.Services.AddControllersWithViews();
+// Đăng ký DbContext vào hệ thống
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+>>>>>>> Stashed changes
 
 var app = builder.Build();
 
