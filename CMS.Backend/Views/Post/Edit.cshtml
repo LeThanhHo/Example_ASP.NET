@@ -1,0 +1,126 @@
+﻿@* Ten: Le Thanh Ho | MSSV: 2123110125 | Lop: CCQ2311D *@
+@{
+    Layout = "_LayoutAdmin";
+}
+
+@model CMS.Data.Entities.Post
+
+@{
+    ViewData["Title"] = "Chỉnh Sửa Bài Viết";
+}
+
+<div class="container mt-4" style="max-width: 760px;">
+
+    <div class="d-flex align-items-center mb-3">
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm me-3">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+        <h2 class="mb-0 text-warning fw-bold">
+            <i class="bi bi-pencil-square me-2"></i>Chỉnh Sửa Bài Viết
+        </h2>
+    </div>
+
+    <hr />
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Vui lòng kiểm tra lại thông tin:</strong>
+            <ul class="mb-0 mt-1">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CreatedDate" />
+
+               
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label fw-semibold">
+                        Tiêu đề <span class="text-danger">*</span>
+                    </label>
+                    <input asp-for="Title" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+
+              
+                <div class="mb-3">
+                    <label asp-for="CategoryId" class="form-label fw-semibold">
+                        Danh mục <span class="text-danger">*</span>
+                    </label>
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                </div>
+
+               
+                <div class="mb-3">
+                    <label asp-for="ImageUrl" class="form-label fw-semibold">URL hình ảnh</label>
+                    <input asp-for="ImageUrl" class="form-control"
+                           placeholder="https://example.com/image.jpg"
+                           oninput="previewImage(this.value)" />
+                    <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                    <div id="imagePreview" class="mt-2"
+                         style="display: @(string.IsNullOrEmpty(Model.ImageUrl) ? "none" : "block")">
+                        <img id="previewImg" src="@Model.ImageUrl" alt="Preview"
+                             class="img-thumbnail" style="max-height:160px;" />
+                    </div>
+                </div>
+
+          
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label fw-semibold">
+                        Nội dung <span class="text-danger">*</span>
+                    </label>
+                    <textarea asp-for="Content" class="form-control" rows="8"></textarea>
+                    <span asp-validation-for="Content" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-muted">Ngày tạo</label>
+                    <input type="text" class="form-control"
+                           value="@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")" readonly />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning px-4">
+                        <i class="bi bi-save me-1"></i> Cập nhật
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x-lg me-1"></i> Hủy bỏ
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function previewImage(url) {
+            const preview = document.getElementById('imagePreview');
+            const img = document.getElementById('previewImg');
+            if (url.trim() !== '') {
+                img.src = url;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+    </script>
+}
