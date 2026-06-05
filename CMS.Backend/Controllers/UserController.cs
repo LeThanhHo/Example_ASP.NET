@@ -9,9 +9,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Authorization; // Cần thêm namespace này
+
+
 
 namespace CMS.Backend.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class UserController : Controller
     {
         private readonly ApplicationDbContext _context;
