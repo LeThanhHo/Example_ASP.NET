@@ -1,0 +1,145 @@
+﻿@* Ten: Le Thanh Ho | MSSV: 2123110125 | Lop: CCQ2311D *@
+@model CMS.Data.Entities.Product
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Sản phẩm";
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm me-3">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+    <h4 class="fw-bold mb-0">
+        <i class="bi bi-pencil-square me-2 text-warning"></i>Chỉnh sửa Sản phẩm
+    </h4>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Vui lòng kiểm tra lại thông tin:</strong>
+        <ul class="mb-0 mt-1">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">Thông tin sản phẩm</h6>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-semibold">
+                            Tên sản phẩm <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Name" class="form-control" autocomplete="off" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Price" class="form-label fw-semibold">
+                                Giá bán (₫) <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Price" type="number" min="0" step="1000"
+                                   class="form-control" />
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="StockQuantity" class="form-label fw-semibold">
+                                Số lượng tồn kho <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="StockQuantity" type="number" min="0"
+                                   class="form-control" />
+                            <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label asp-for="CategoryProductId" class="form-label fw-semibold">
+                            Danh mục <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="CategoryProductId" asp-items="ViewBag.Categories"
+                                class="form-select">
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                        <span asp-validation-for="CategoryProductId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ImageUrl" class="form-label fw-semibold">URL hình ảnh</label>
+                        <input asp-for="ImageUrl" class="form-control"
+                               oninput="previewImage(this.value)" />
+                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning px-4">
+                            <i class="bi bi-save me-1"></i> Cập nhật
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-lg me-1"></i> Hủy
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{!-- Preview ảnh --}}
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">Xem trước hình ảnh</h6>
+            </div>
+            <div class="card-body text-center p-4">
+                <div id="imagePlaceholder" class="text-muted"
+                     style="display: @(string.IsNullOrEmpty(Model.ImageUrl) ? "block" : "none")">
+                    <i class="bi bi-image" style="font-size:3rem; opacity:0.3;"></i>
+                    <p class="small mt-2">Nhập URL ảnh để xem trước</p>
+                </div>
+                <img id="previewImg" src="@Model.ImageUrl" alt="Preview"
+                     class="img-fluid rounded shadow-sm @(string.IsNullOrEmpty(Model.ImageUrl) ? "d-none" : "")"
+                     style="max-height:220px; object-fit:cover;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function previewImage(url) {
+            const img = document.getElementById('previewImg');
+            const placeholder = document.getElementById('imagePlaceholder');
+            if (url.trim()) {
+                img.src = url;
+                img.classList.remove('d-none');
+                placeholder.style.display = 'none';
+            } else {
+                img.classList.add('d-none');
+                placeholder.style.display = 'block';
+            }
+        }
+    </script>
+}

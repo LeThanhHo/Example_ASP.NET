@@ -43,7 +43,7 @@ namespace CMS.Backend.Controllers
         // GET: /User/Create
         public IActionResult Create()
         {
-            ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" });
+            ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" });
             return View();
         }
 
@@ -56,7 +56,7 @@ namespace CMS.Backend.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" });
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" });
                 return View(model);
             }
 
@@ -67,14 +67,14 @@ namespace CMS.Backend.Controllers
             if (isDuplicate)
             {
                 ModelState.AddModelError("Username", "Tên đăng nhập này đã tồn tại");
-                ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" });
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" });
                 return View(model);
             }
 
             if (string.IsNullOrWhiteSpace(Password))
             {
                 ModelState.AddModelError("Password", "Mật khẩu không được để trống");
-                ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" });
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" });
                 return View(model);
             }
 
@@ -89,7 +89,7 @@ namespace CMS.Backend.Controllers
             catch (Exception)
             {
                 ModelState.AddModelError("", "Đã xảy ra lỗi khi lưu dữ liệu. Vui lòng thử lại.");
-                ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" });
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" });
                 return View(model);
             }
         }
@@ -104,7 +104,7 @@ namespace CMS.Backend.Controllers
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" }, user.Role);
+            ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" }, user.Role);
             return View(user);
         }
 
@@ -121,7 +121,7 @@ namespace CMS.Backend.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" }, model.Role);
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" }, model.Role);
                 return View(model);
             }
 
@@ -132,7 +132,7 @@ namespace CMS.Backend.Controllers
             if (isDuplicate)
             {
                 ModelState.AddModelError("Username", "Tên đăng nhập này đã tồn tại");
-                ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" }, model.Role);
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" }, model.Role);
                 return View(model);
             }
 
@@ -160,7 +160,7 @@ namespace CMS.Backend.Controllers
             catch (Exception)
             {
                 ModelState.AddModelError("", "Đã xảy ra lỗi khi lưu dữ liệu. Vui lòng thử lại.");
-                ViewBag.Roles = new SelectList(new[] { "Quản trị viên", "Biên tập viên" }, model.Role);
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Biên tập viên" }, model.Role);
                 return View(model);
             }
         }
