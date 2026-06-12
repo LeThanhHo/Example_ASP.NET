@@ -31,7 +31,18 @@ const postService = {
             console.error(`Lỗi API getBlogById với ID ${id}:`, error);
             throw error;
         }
+    },
+    getPostById: async (id) => {
+        try {
+            // axiosClient đã cấu hình sẵn baseURL đến https://localhost:7116/api
+            const response = await axiosClient.get(`/Posts/${id}`);
+            return response.data || response;
+        } catch (error) {
+            console.error(`Lỗi hệ thống khi gọi API getPostById với ID ${id}:`, error);
+            throw error;
+        }
     }
+
 };
 
 // BẮT BUỘC: Xuất mặc định để file LatestBlog.jsx có thể import trực tiếp không bị lỗi

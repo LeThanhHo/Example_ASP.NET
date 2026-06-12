@@ -39,10 +39,10 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
-            <form asp-action="Create" method="post">
+            @* 💡 ĐÃ BỔ SUNG: enctype="multipart/form-data" để hỗ trợ upload tệp ảnh bài viết *@
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
-              
                 <div class="mb-3">
                     <label asp-for="Title" class="form-label fw-semibold">
                         Tiêu đề <span class="text-danger">*</span>
@@ -52,34 +52,29 @@
                     <span asp-validation-for="Title" class="text-danger small"></span>
                 </div>
 
-               
                 <div class="mb-3">
                     <label asp-for="CategoryId" class="form-label fw-semibold">
                         Danh mục <span class="text-danger">*</span>
                     </label>
-                    <select asp-for="CategoryId" asp-items="ViewBag.Categories"
-                            class="form-select">
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select">
                         <option value="">-- Chọn danh mục --</option>
                     </select>
                     <span asp-validation-for="CategoryId" class="text-danger small"></span>
                 </div>
 
-               
+                @* 💡 ĐÃ THAY ĐỔI: Chuyển đổi từ input nhập link URL sang input chọn file *@
                 <div class="mb-3">
-                    <label asp-for="ImageUrl" class="form-label fw-semibold">
-                        URL hình ảnh
-                    </label>
-                    <input asp-for="ImageUrl" class="form-control"
-                           placeholder="https://example.com/image.jpg"
-                           oninput="previewImage(this.value)" />
-                    <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                    <label class="form-label fw-semibold">Hình ảnh đại diện bài viết</label>
+                    <input type="file" name="imageFile" class="form-control"
+                           accept="image/*" onchange="previewImage(this)" />
+
+                    {/* Khung hiển thị ảnh xem trước ngay khi chọn file */}
                     <div id="imagePreview" class="mt-2" style="display:none;">
                         <img id="previewImg" src="" alt="Preview"
-                             class="img-thumbnail" style="max-height:160px;" />
+                             class="img-thumbnail" style="max-height:160px; object-fit: cover;" />
                     </div>
                 </div>
 
-                
                 <div class="mb-4">
                     <label asp-for="Content" class="form-label fw-semibold">
                         Nội dung <span class="text-danger">*</span>
@@ -108,14 +103,21 @@
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        function previewImage(url) {
+        // 💡 THUẬT TOÁN: Đọc file ảnh offline và hiển thị preview trực tiếp trên trình duyệt
+        function previewImage(input) {
             const preview = document.getElementById('imagePreview');
             const img = document.getElementById('previewImg');
-            if (url.trim() !== '') {
-                img.src = url;
-                preview.style.display = 'block';
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
             } else {
                 preview.style.display = 'none';
+                img.src = "";
             }
         }
     </script>

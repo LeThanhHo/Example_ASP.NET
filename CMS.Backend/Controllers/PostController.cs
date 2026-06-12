@@ -8,19 +8,26 @@ using CMS.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization; // Cần thêm namespace này
-
-
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting; // Thêm namespace để quản lý thư mục vật lý
+using Microsoft.AspNetCore.Http;    // Thêm namespace để dùng IFormFile nhận file ảnh
+using System;
+using System.IO;
+using System.Linq;
 
 namespace CMS.Backend.Controllers
-{[Authorize]
+{
+    [Authorize]
     public class PostController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment; // Khai báo dịch vụ quản lý thư mục wwwroot
 
-        public PostController(ApplicationDbContext context)
+        // Tiêm cả DbContext và WebHostEnvironment vào Controller
+        public PostController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: /Post/Index
@@ -57,7 +64,6 @@ namespace CMS.Backend.Controllers
         // GET: /Post/Create
         public IActionResult Create()
         {
-            // Truyền danh sách Category cho dropdown
             ViewBag.Categories = new SelectList(_context.Categories.ToList(), "Id", "Name");
             return View();
         }
@@ -65,9 +71,10 @@ namespace CMS.Backend.Controllers
         // POST: /Post/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Post model)
+        public IActionResult Create(Post model, IFormFile imageFile) // Bổ sung tham số imageFile để hứng tệp tin
         {
             ModelState.Remove("Category");
+            ModelState.Remove("ImageUrl"); // Loại bỏ kiểm tra chuỗi URL trống trong validation
 
             if (!ModelState.IsValid)
             {
@@ -77,6 +84,35 @@ namespace CMS.Backend.Controllers
 
             try
             {
+                // XỬ LÝ UPLOAD HÌNH ẢNH MỚI CHO BÀI VIẾT
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    // Tạo thư mục lưu trữ: wwwroot/images/posts
+                    string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "images", "posts");
+                    if (!Directory.Exists(uploadDir))
+                    {
+                        Directory.CreateDirectory(uploadDir);
+                    }
+
+                    // Tránh trùng tên file ảnh bằng chuỗi ngẫu nhiên Guid
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(imageFile.FileName);
+                    string filePath = Path.Combine(uploadDir, uniqueFileName);
+
+                    // Lưu file xuống ổ đĩa
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        imageFile.CopyTo(fileStream);
+                    }
+
+                    // Gán đường dẫn tương đối để lưu vào cơ sở dữ liệu SQL Server
+                    model.ImageUrl = "/images/posts/" + uniqueFileName;
+                }
+                else
+                {
+                    // Ảnh mặc định cho cẩm nang/tin tức cơ khí nếu người dùng bỏ trống
+                    model.ImageUrl = "/images/posts/default-blog.jpg";
+                }
+
                 model.CreatedDate = DateTime.Now;
                 _context.Posts.Add(model);
                 _context.SaveChanges();
@@ -109,9 +145,10 @@ namespace CMS.Backend.Controllers
         // POST: /Post/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Post model)
+        public IActionResult Edit(int id, Post model, IFormFile imageFile) // Bổ sung tham số imageFile
         {
             ModelState.Remove("Category");
+            ModelState.Remove("ImageUrl");
 
             if (id != model.Id)
                 return BadRequest();
@@ -131,11 +168,40 @@ namespace CMS.Backend.Controllers
                     return RedirectToAction("Index");
                 }
 
+                // XỬ LÝ CẬP NHẬT FILE HÌNH ẢNH MỚI (NẾU CÓ THAY ĐỔI)
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "images", "posts");
+                    if (!Directory.Exists(uploadDir))
+                    {
+                        Directory.CreateDirectory(uploadDir);
+                    }
+
+                    // TỰ ĐỘNG XÓA FILE ẢNH CŨ TRÊN Ổ ĐĨA ĐỂ TRÁNH RÁC HỆ THỐNG
+                    if (!string.IsNullOrEmpty(post.ImageUrl) && !post.ImageUrl.Contains("default-blog.jpg"))
+                    {
+                        string oldFilePath = Path.Combine(_webHostEnvironment.WebRootPath, post.ImageUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            System.IO.File.Delete(oldFilePath);
+                        }
+                    }
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(imageFile.FileName);
+                    string filePath = Path.Combine(uploadDir, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        imageFile.CopyTo(fileStream);
+                    }
+
+                    post.ImageUrl = "/images/posts/" + uniqueFileName;
+                }
+                // Nếu không chọn file mới, giữ nguyên post.ImageUrl cũ từ Database
+
                 post.Title = model.Title;
                 post.Content = model.Content;
-                post.ImageUrl = model.ImageUrl;
                 post.CategoryId = model.CategoryId;
-                // Giữ nguyên CreatedDate, không cập nhật lại
 
                 _context.SaveChanges();
                 TempData["SuccessMessage"] = $"Đã cập nhật bài viết \"{model.Title}\" thành công!";
@@ -161,6 +227,16 @@ namespace CMS.Backend.Controllers
                 {
                     TempData["ErrorMessage"] = "Không tìm thấy bài viết cần xóa.";
                     return RedirectToAction("Index");
+                }
+
+                // XÓA FILE ẢNH VẬT LÝ KHI BÀI VIẾT BỊ XÓA HẲN KHỎI SQL SERVER
+                if (!string.IsNullOrEmpty(post.ImageUrl) && !post.ImageUrl.Contains("default-blog.jpg"))
+                {
+                    string filePath = Path.Combine(_webHostEnvironment.WebRootPath, post.ImageUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
                 }
 
                 _context.Posts.Remove(post);
