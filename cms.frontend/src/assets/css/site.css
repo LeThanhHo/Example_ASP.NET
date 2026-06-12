@@ -1,0 +1,8 @@
+﻿/* Hiệu ứng xoay bánh răng nhẹ nhàng khi rê chuột vào logo */
+.main-header-wrapper .spinning-gear-effect {
+    transition: transform 0.6s ease-in-out;
+}
+
+.main-header-wrapper a:hover .spinning-gear-effect {
+    transform: rotate(180deg);
+}

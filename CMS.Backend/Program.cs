@@ -27,7 +27,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     });
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy => policy.WithOrigins("http://localhost:3000") // Cổng của ReactJS
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -46,7 +52,7 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
+app.UseCors("AllowReactApp");
 app.UseAuthentication(); // ← Phải có và phải đứng TRƯỚC UseAuthorization
 app.UseAuthorization();
 

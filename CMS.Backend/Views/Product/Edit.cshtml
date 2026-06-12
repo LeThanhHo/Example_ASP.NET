@@ -36,7 +36,8 @@
                 <h6 class="mb-0 fw-semibold">Thông tin sản phẩm</h6>
             </div>
             <div class="card-body p-4">
-                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                @* 💡 ĐÃ BỔ SUNG: enctype="multipart/form-data" để Controller nhận được file ảnh mới *@
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Id" />
 
@@ -84,15 +85,16 @@
                         <span asp-validation-for="CategoryProductId" class="text-danger small"></span>
                     </div>
 
+                    @* 💡 ĐÃ THAY ĐỔI: Chuyển đổi từ input nhập URL thành ô chọn tệp hình ảnh mới *@
                     <div class="mb-4">
-                        <label asp-for="ImageUrl" class="form-label fw-semibold">URL hình ảnh</label>
-                        <input asp-for="ImageUrl" class="form-control"
-                               oninput="previewImage(this.value)" />
-                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                        <label class="form-label fw-semibold">Thay đổi hình ảnh sản phẩm</label>
+                        <input type="file" name="imageFile" class="form-control"
+                               accept="image/*" onchange="previewImage(this)" />
+                        <small class="text-muted d-block mt-1">Để trống nếu bạn muốn giữ nguyên hình ảnh hiện tại.</small>
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-warning px-4">
+                        <button type="submit" class="btn btn-warning px-4 font-weight-bold">
                             <i class="bi bi-save me-1"></i> Cập nhật
                         </button>
                         <a asp-action="Index" class="btn btn-outline-secondary px-4">
@@ -105,21 +107,24 @@
         </div>
     </div>
 
-    {{!-- Preview ảnh --}}
+    @* Khối Preview hiển thị ảnh hiện tại hoặc ảnh mới vừa tải lên *@
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom py-3">
                 <h6 class="mb-0 fw-semibold">Xem trước hình ảnh</h6>
             </div>
             <div class="card-body text-center p-4">
+                @* Nếu sản phẩm chưa có sẵn ảnh, hiển thị placeholder này *@
                 <div id="imagePlaceholder" class="text-muted"
                      style="display: @(string.IsNullOrEmpty(Model.ImageUrl) ? "block" : "none")">
                     <i class="bi bi-image" style="font-size:3rem; opacity:0.3;"></i>
-                    <p class="small mt-2">Nhập URL ảnh để xem trước</p>
+                    <p class="small mt-2">Chưa có hình ảnh minh họa</p>
                 </div>
+
+                @* Nếu đã có ảnh sẵn từ database, hiển thị thẳng lên thông qua Model *@
                 <img id="previewImg" src="@Model.ImageUrl" alt="Preview"
                      class="img-fluid rounded shadow-sm @(string.IsNullOrEmpty(Model.ImageUrl) ? "d-none" : "")"
-                     style="max-height:220px; object-fit:cover;" />
+                     style="max-height:220px; object-fit:contain; padding: 10px; background-color: #f8fafc;" />
             </div>
         </div>
     </div>
@@ -129,16 +134,33 @@
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        function previewImage(url) {
+        // Lưu đường dẫn ảnh gốc từ database làm bộ nhớ đệm
+        const originalImageUrl = "@Model.ImageUrl";
+
+        // 💡 THUẬT TOÁN: Đọc tệp ảnh mới và thay thế màn hình preview cục bộ
+        function previewImage(input) {
             const img = document.getElementById('previewImg');
             const placeholder = document.getElementById('imagePlaceholder');
-            if (url.trim()) {
-                img.src = url;
-                img.classList.remove('d-none');
-                placeholder.style.display = 'none';
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    img.src = e.target.result;
+                    img.classList.remove('d-none');
+                    placeholder.style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
             } else {
-                img.classList.add('d-none');
-                placeholder.style.display = 'block';
+                // Nếu người dùng hủy chọn tệp, trả lại ảnh gốc của sản phẩm
+                if (originalImageUrl.trim()) {
+                    img.src = originalImageUrl;
+                    img.classList.remove('d-none');
+                    placeholder.style.display = 'none';
+                } else {
+                    img.classList.add('d-none');
+                    placeholder.style.display = 'block';
+                    img.src = "";
+                }
             }
         }
     </script>

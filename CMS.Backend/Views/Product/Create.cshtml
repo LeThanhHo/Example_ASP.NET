@@ -36,7 +36,8 @@
                 <h6 class="mb-0 fw-semibold">Thông tin sản phẩm</h6>
             </div>
             <div class="card-body p-4">
-                <form asp-action="Create" method="post" id="productForm">
+                @* 💡 ĐÃ BỔ SUNG: enctype="multipart/form-data" để hỗ trợ upload tệp *@
+                <form asp-action="Create" method="post" id="productForm" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
 
                     <div class="mb-3">
@@ -85,12 +86,11 @@
                         <span asp-validation-for="CategoryProductId" class="text-danger small"></span>
                     </div>
 
+                    @* 💡 ĐÃ THAY ĐỔI: Chuyển đổi từ input text sang input file chọn từ máy tính *@
                     <div class="mb-4">
-                        <label asp-for="ImageUrl" class="form-label fw-semibold">URL hình ảnh</label>
-                        <input asp-for="ImageUrl" class="form-control"
-                               placeholder="https://example.com/image.jpg"
-                               oninput="previewImage(this.value)" />
-                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                        <label class="form-label fw-semibold">Hình ảnh sản phẩm</label>
+                        <input type="file" name="imageFile" id="imageFileInput" class="form-control"
+                               accept="image/*" onchange="previewImage(this)" />
                     </div>
 
                     <div class="d-flex gap-2">
@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    {{!-- Preview ảnh --}}
+    @* Khối Preview hiển thị ảnh cục bộ bằng FileReader *@
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom py-3">
@@ -116,7 +116,7 @@
             <div class="card-body text-center p-4">
                 <div id="imagePlaceholder" class="text-muted">
                     <i class="bi bi-image" style="font-size:3rem; opacity:0.3;"></i>
-                    <p class="small mt-2">Nhập URL ảnh để xem trước</p>
+                    <p class="small mt-2">Chọn file ảnh để xem trước</p>
                 </div>
                 <img id="previewImg" src="" alt="Preview"
                      class="img-fluid rounded shadow-sm d-none"
@@ -130,16 +130,23 @@
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        function previewImage(url) {
+        // 💡 THUẬT TOÁN: Đọc file ảnh offline hiển thị lên khung preview trước khi submit form
+        function previewImage(input) {
             const img = document.getElementById('previewImg');
             const placeholder = document.getElementById('imagePlaceholder');
-            if (url.trim()) {
-                img.src = url;
-                img.classList.remove('d-none');
-                placeholder.classList.add('d-none');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    img.src = e.target.result;
+                    img.classList.remove('d-none');
+                    placeholder.classList.add('d-none');
+                }
+                reader.readAsDataURL(input.files[0]);
             } else {
                 img.classList.add('d-none');
                 placeholder.classList.remove('d-none');
+                img.src = "";
             }
         }
     </script>
