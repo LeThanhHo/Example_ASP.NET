@@ -1,57 +1,67 @@
-﻿// Import cấu hình axiosClient dùng chung từ thư mục api
-import axiosClient from '../api/axiosClient';
+﻿// src/services/productService.js
+// Ten: Le Thanh Ho | MSSV: 2123110125 | Lop: CCQ2311D
 
+const API_BASE_URL = 'https://localhost:7116';
+const PRODUCT_API = `${API_BASE_URL}/api/products`;
+const CATEGORY_API = `${API_BASE_URL}/api/categoryproducts`;
+
+/** Lấy tất cả sản phẩm */
+export async function getAllProducts() {
+    const res = await fetch(PRODUCT_API);
+    if (!res.ok) throw new Error('Lỗi tải sản phẩm');
+    return res.json();
+}
+
+/** Lấy sản phẩm theo ID */
+export async function getProductById(id) {
+    const res = await fetch(`${PRODUCT_API}/${id}`);
+    if (!res.ok) throw new Error(`Không tìm thấy sản phẩm ID=${id}`);
+    return res.json();
+}
+
+/** Lấy sản phẩm theo danh mục */
+export async function getProductsByCategory(categoryId) {
+    const res = await fetch(`${PRODUCT_API}/category/${categoryId}`);
+    if (!res.ok) throw new Error('Lỗi tải sản phẩm theo danh mục');
+    return res.json();
+}
+
+/**
+ * Lọc / sắp xếp sản phẩm theo giá.
+ * @param {{minPrice?: number, maxPrice?: number, sort?: 'asc'|'desc'}} params
+ */
+export async function getProductsByPrice({ minPrice, maxPrice, sort = 'asc' } = {}) {
+    const query = new URLSearchParams();
+    if (minPrice != null) query.set('minPrice', minPrice);
+    if (maxPrice != null) query.set('maxPrice', maxPrice);
+    query.set('sort', sort);
+
+    const res = await fetch(`${PRODUCT_API}/by-price?${query.toString()}`);
+    if (!res.ok) throw new Error('Lỗi lọc sản phẩm theo giá');
+    return res.json();
+}
+
+/** Lấy tất cả danh mục sản phẩm (dùng cho bộ lọc sidebar) */
+export async function getAllProductCategories() {
+    const res = await fetch(CATEGORY_API);
+    if (!res.ok) throw new Error('Lỗi tải danh mục sản phẩm');
+    return res.json();
+}
+
+export { API_BASE_URL };
+
+// ── Default export ──────────────────────────────────────────
+// Cho phép import theo 2 cách:
+//   import { getAllProducts } from '../services/productService';   (named)
+//   import productService from '../services/productService';       (default)
+//   productService.getAllProducts(...)
 const productService = {
-    /**
-     * 1. Lấy danh sách toàn bộ sản phẩm thời trang (hoặc theo bộ lọc)
-     * API Endpoint: GET https://localhost:xxxx/api/Products
-     */
-    getAllProducts: async () => {
-        try {
-            // Thực hiện gọi API GET để lấy danh sách sản phẩm
-            const response = await axiosClient.get('/Products');
-
-            // Trả về mảng dữ liệu sản phẩm
-            return response.data || response;
-        } catch (error) {
-            console.error("Lỗi API getAllProducts:", error);
-            throw error; // Đẩy lỗi ra ngoài để component ProductGrid bắt được và xử lý giao diện
-        }
-    },
-    /**
-      * Lấy danh sách sản phẩm (Có hỗ trợ lọc theo đường dẫn danh mục của bạn)
-      * @param {number|null} categoryId - ID của danh mục cần lọc
-      */
-    getAllProducts: async (categoryId = null) => {
-        try {
-            // 💡 ĐÃ SỬA: Nếu có ID thì gọi đúng chuẩn /Products/category/1
-            // Nếu không có ID (null) thì gọi toàn bộ sản phẩm /Products
-            const url = categoryId ? `/Products/category/${categoryId}` : '/Products';
-
-            const response = await axiosClient.get(url);
-            return response.data || response;
-        } catch (error) {
-            console.error("Lỗi hệ thống khi gọi API getAllProducts:", error);
-            throw error;
-        }
-    },
-
-    /**
-     * 2. Lấy thông tin chi tiết của một sản phẩm theo ID
-     * API Endpoint: GET https://localhost:xxxx/api/Products/{id}
-     */
-    getProductById: async (id) => {
-        try {
-            // axiosClient đã có baseURL là https://localhost:7116/api
-            const response = await axiosClient.get(`/Products/${id}`);
-            return response.data || response;
-        } catch (error) {
-            console.error(`Lỗi API getProductById với ID ${id}:`, error);
-            throw error;
-        }
-    }
+    getAllProducts,
+    getProductById,
+    getProductsByCategory,
+    getProductsByPrice,
+    getAllProductCategories,
+    API_BASE_URL
 };
 
-
-// CRITICAL: Xuất mặc định đối tượng này để file ProductGrid.jsx import vào không bị lỗi 'default was not found'
 export default productService;

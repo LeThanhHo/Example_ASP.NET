@@ -4,12 +4,18 @@
  Lop: CCQ2311D
 */
 using CMS.Data;
+using CMS.Data.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CMS.Backend.Controllers
 {
@@ -22,7 +28,7 @@ namespace CMS.Backend.Controllers
             _context = context;
         }
 
-        // Hash mật khẩu SHA256 (giống UserController)
+        // Hàm băm mật khẩu SHA256 đồng bộ hệ thống
         private string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
@@ -34,9 +40,12 @@ namespace CMS.Backend.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            // Nếu đã đăng nhập thì chuyển về trang chủ
+            // 💡 ĐÃ SỬA: Thay thế "Login.Identity" bằng "User.Identity" chuẩn xác để hết lỗi
             if (User.Identity?.IsAuthenticated == true)
+            {
+                // Nếu đã đăng nhập hệ thống rồi thì đẩy thẳng về trang chủ Dashboard quản trị
                 return RedirectToAction("Index", "Home");
+            }
 
             return View();
         }
@@ -52,15 +61,22 @@ namespace CMS.Backend.Controllers
                 return View();
             }
 
-            // Hash mật khẩu trước khi so sánh với DB
             string hashedPassword = HashPassword(password);
 
+            // Truy vấn kiểm tra thông tin tài khoản tại bảng Users chung
             var user = _context.Users
-                .FirstOrDefault(u => u.Username == username && u.PasswordHash == hashedPassword);
+                .FirstOrDefault(u => u.Username.ToLower() == username.ToLower() && u.PasswordHash == hashedPassword);
 
             if (user != null)
             {
-                // Thiết lập Claims
+                // 🔒 💡 CHẶN KHÁCH HÀNG: Nếu tài khoản mang Role "Khách hàng", chặn ngay không cho vào Admin
+                if (user.Role == "Khách hàng")
+                {
+                    ViewBag.Error = "Quyền truy cập bị từ chối! Tài khoản khách hàng chỉ được phép sử dụng ở trang mua sắm Frontend.";
+                    return View();
+                }
+
+                // THIẾT LẬP CẤP QUYỀN ĐĂNG NHẬP COOKIE CHO ADMIN/NHÂN VIÊN
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.Username),
@@ -73,7 +89,7 @@ namespace CMS.Backend.Controllers
 
                 var authProperties = new AuthenticationProperties
                 {
-                    IsPersistent = true, // Ghi nhớ đăng nhập
+                    IsPersistent = true,
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 };
 
@@ -82,10 +98,14 @@ namespace CMS.Backend.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
+                // Đồng bộ lưu thêm Session b bọc lót nếu các View cũ của bạn cần dùng
+                HttpContext.Session.SetInt32("AdminId", user.Id);
+                HttpContext.Session.SetString("AdminName", user.FullName);
+
                 return RedirectToAction("Index", "Home");
             }
 
-            ViewBag.Error = "Tên đăng nhập hoặc mật khẩu không đúng!";
+            ViewBag.Error = "Tài khoản hoặc mật khẩu quản trị không chính xác!";
             return View();
         }
 
@@ -93,6 +113,7 @@ namespace CMS.Backend.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            HttpContext.Session.Clear(); // Dọn dẹp sạch Session
             return RedirectToAction("Login");
         }
 

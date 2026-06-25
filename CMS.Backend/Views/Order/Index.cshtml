@@ -1,0 +1,80 @@
+﻿@model IEnumerable<CMS.Data.Entities.Order>
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng Thiết bị";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml"; // Hoặc Layout tổng Admin của bạn
+    int? currentStatus = ViewBag.CurrentStatus as int?;
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <h5 className="m-0 font-weight-bold"><i className="fas fa-boxes mr-2 text-warning"></i>DANH SÁCH ĐƠN HÀNG VẬT TƯ</h5>
+        </div>
+        <div class="card-body bg-white">
+
+            <div className="mb-4 d-flex flex-wrap gap-2" style="gap: 10px;">
+                <a href="@Url.Action("Index", "Order")" class="btn btn-sm @(currentStatus == null ? "btn-secondary font-weight-bold" : "btn-outline-secondary")">Tất cả</a>
+                <a href="@Url.Action("Index", "Order", new { status = 0 })" class="btn btn-sm @(currentStatus == 0 ? "btn-warning text-white font-weight-bold" : "btn-outline-warning")">Chờ duyệt</a>
+                <a href="@Url.Action("Index", "Order", new { status = 1 })" class="btn btn-sm @(currentStatus == 1 ? "btn-primary font-weight-bold" : "btn-outline-primary")">Đang giao máy</a>
+                <a href="@Url.Action("Index", "Order", new { status = 2 })" class="btn btn-sm @(currentStatus == 2 ? "btn-success font-weight-bold" : "btn-outline-success")">Đã hoàn thành</a>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success small py-2">@TempData["SuccessMessage"]</div>
+            }
+
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle border" style="font-size: 14px;">
+                    <thead class="thead-dark text-uppercase" style="font-size: 12.5px;">
+                        <tr>
+                            <th style="width: 100px;">Mã Đơn</th>
+                            <th>Khách hàng / Thợ đối tác</th>
+                            <th>Ghi chú giao hàng</th>
+                            <th style="width: 180px;">Trạng thái</th>
+                            <th style="width: 120px;" class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Hệ thống hiện tại chưa ghi nhận đơn đặt mua hàng nào thuộc nhóm này.</td>
+                            </tr>
+                        }
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td class="font-weight-bold text-secondary">#@order.Id</td>
+                                <td>
+                                    <div class="font-weight-bold text-dark">@(order.Customer?.FullName ?? "Tài khoản vãng lai")</div>
+                                    <small class="text-muted">@order.Customer?.Email</small>
+                                </td>
+                                <td class="text-truncate" style="max-width: 250px;">@(string.IsNullOrEmpty(order.Notes) ? "---" : order.Notes)</td>
+                                <td>
+                                    @if (order.Status == 0)
+                                    {
+                                        <span class="badge badge-warning p-2 text-white text-uppercase" style="font-size: 11px;"><i class="fas fa-clock mr-1"></i> Chờ duyệt đơn</span>
+                                    }
+                                    else if (order.Status == 1)
+                                    {
+                                        <span class="badge badge-primary p-2 text-white text-uppercase" style="font-size: 11px;"><i class="fas fa-truck mr-1"></i> Đang giao hàng</span>
+                                    }
+                                    else if (order.Status == 2)
+                                    {
+                                        <span class="badge badge-success p-2 text-white text-uppercase" style="font-size: 11px;"><i class="fas fa-check-circle mr-1"></i> Đã hoàn thành</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <a href="@Url.Action("Details", "Order", new { id = order.Id })" class="btn btn-dark btn-sm font-weight-bold" style="font-size: 12px;">
+                                        <i class="fas fa-eye mr-1"></i> Xem & Duyệt
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

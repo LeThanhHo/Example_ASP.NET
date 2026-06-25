@@ -80,6 +80,83 @@ namespace CMS.Backend.Controllers.Api
             return Ok(products);
         }
 
+        /// <summary>
+        /// Lọc / sắp xếp sản phẩm theo giá.
+        /// sort = "asc" (thấp → cao) hoặc "desc" (cao → thấp).
+        /// minPrice, maxPrice: lọc khoảng giá (không bắt buộc).
+        /// Ví dụ: /api/products/by-price?sort=desc
+        ///        /api/products/by-price?minPrice=100000&amp;maxPrice=500000&amp;sort=asc
+        /// </summary>
+        [HttpGet("by-price")]
+        public IActionResult GetByPrice(
+            [FromQuery] decimal? minPrice,
+            [FromQuery] decimal? maxPrice,
+            [FromQuery] string sort = "asc")
+        {
+            var query = _context.Products.AsQueryable();
+
+            if (minPrice.HasValue)
+                query = query.Where(p => p.Price >= minPrice.Value);
+
+            if (maxPrice.HasValue)
+                query = query.Where(p => p.Price <= maxPrice.Value);
+
+            query = sort?.ToLower() == "desc"
+                ? query.OrderByDescending(p => p.Price)
+                : query.OrderBy(p => p.Price);
+
+            var products = query
+                .Select(p => new {
+                    p.Id,
+                    p.Name,
+                    p.Price,
+                    p.StockQuantity,
+                    p.ImageUrl,
+                    CategoryName = p.CategoryProduct.Name
+                })
+                .ToList();
+
+            return Ok(products);
+        }
+
+        /// <summary>Lấy sản phẩm có giá cao nhất</summary>
+        [HttpGet("highest-price")]
+        public IActionResult GetHighestPrice([FromQuery] int top = 5)
+        {
+            var products = _context.Products
+                .OrderByDescending(p => p.Price)
+                .Take(top)
+                .Select(p => new {
+                    p.Id,
+                    p.Name,
+                    p.Price,
+                    p.ImageUrl,
+                    CategoryName = p.CategoryProduct.Name
+                })
+                .ToList();
+
+            return Ok(products);
+        }
+
+        /// <summary>Lấy sản phẩm có giá thấp nhất</summary>
+        [HttpGet("lowest-price")]
+        public IActionResult GetLowestPrice([FromQuery] int top = 5)
+        {
+            var products = _context.Products
+                .OrderBy(p => p.Price)
+                .Take(top)
+                .Select(p => new {
+                    p.Id,
+                    p.Name,
+                    p.Price,
+                    p.ImageUrl,
+                    CategoryName = p.CategoryProduct.Name
+                })
+                .ToList();
+
+            return Ok(products);
+        }
+
         /// <summary>Thêm sản phẩm mới</summary>
         [HttpPost]
         public IActionResult Create([FromBody] Product model)
@@ -88,6 +165,7 @@ namespace CMS.Backend.Controllers.Api
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            // Sửa lỗi: phải dùng đúng tên DbSet là CategoryProducts
             bool categoryExists = _context.CategoriesProducts
                 .Any(c => c.Id == model.CategoryProductId);
             if (!categoryExists)

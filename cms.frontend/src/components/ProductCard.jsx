@@ -1,5 +1,12 @@
-﻿import React from 'react';
+﻿/*
+ Name: Le Thanh Ho
+ MSSV: 2123110125
+ Lop: CCQ2311D
+*/
+import React from 'react';
 import { Link } from 'react-router-dom';
+// 💡 BỔ SUNG: Import cartService để sử dụng logic lưu trữ giỏ hàng tập trung
+import cartService from '../services/cartService';
 
 const IMAGE_BASE_URL = process.env.REACT_APP_API_URL || "https://localhost:7116";
 
@@ -20,6 +27,23 @@ function ProductCard({ item }) {
         return `${IMAGE_BASE_URL}${url}`;
     };
 
+    // 💡 LÔGIC MỚI: Xử lý thêm máy móc vào giỏ hàng và đồng bộ Header thời gian thực
+    const handleAddToCartClick = () => {
+        // 1. Chuyển đổi item sang cấu trúc product chuẩn của hệ thống để đồng bộ với hàm addToCart
+        const productAdapter = {
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            imageUrl: item.imageUrl
+        };
+
+        // 2. Thực thi lưu mảng JSON xuống máy khách thông qua service
+        cartService.addToCart(productAdapter);
+
+        // 3. 🔄 Bắn tín hiệu đồng bộ để Icon giỏ hàng trên thanh Header tự động nhảy số theo
+        window.dispatchEvent(new Event('storage'));
+    };
+
     return (
         <div className="card h-100 shadow-sm border-0 product-card-hover"
             style={{
@@ -31,27 +55,29 @@ function ProductCard({ item }) {
 
             {/* KHỐI 1: HÌNH ẢNH MÁY MÓC / PHỤ KIỆN + NHÃN TỒN KHO */}
             <div className="position-relative overflow-hidden" style={{ height: '260px', backgroundColor: '#f8fafc' }}>
-                <img
-                    src={getProductImage(item.imageUrl)}
-                    className="card-img-top w-100 h-100"
-                    alt={item.name}
-                    style={{ objectFit: 'contain', padding: '15px', transition: 'transform 0.4s' }}
-                    onMouseOver={(e) => e.target.style.transform = 'scale(1.06)'}
-                    onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-                />
+                <Link to={`/product/${item.id}`}>
+                    <img
+                        src={getProductImage(item.imageUrl)}
+                        className="card-img-top w-100 h-100"
+                        alt={item.name}
+                        style={{ objectFit: 'contain', padding: '15px', transition: 'transform 0.4s' }}
+                        onMouseOver={(e) => e.target.style.transform = 'scale(1.06)'}
+                        onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                    />
+                </Link>
 
                 {/* Thuật toán cơ khí: Kiểm tra số lượng tồn kho thấp */}
                 {item.stockQuantity <= 5 && item.stockQuantity > 0 && (
                     <span className="badge bg-danger text-white position-absolute px-2 py-1 shadow-sm"
-                        style={{ top: '12px', left: '12px', borderRadius: '3px', fontSize: '11px', fontWeight: 'bold' }}>
-                        <i className="fas fa-fire mr-1"></i> SẮP HẾT HÀNG / Còn {item.stockQuantity} sản phẩm
+                        style={{ top: '12px', left: '12px', borderRadius: '3px', fontSize: '11px', fontWeight: 'bold', zIndex: 1 }}>
+                        <i className="fas fa-fire mr-1"></i> SẮP HẾT HÀNG / Còn {item.stockQuantity} máy
                     </span>
                 )}
 
                 {/* Dự phòng trường hợp cháy hàng kho Linh Xuân */}
                 {item.stockQuantity === 0 && (
                     <div className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center text-white font-weight-bold"
-                        style={{ top: 0, left: 0, backgroundColor: 'rgba(0, 0, 0, 0.45)', fontSize: '14px' }}>
+                        style={{ top: 0, left: 0, backgroundColor: 'rgba(0, 0, 0, 0.45)', fontSize: '14px', zIndex: 1 }}>
                         <span className="badge bg-secondary px-3 py-2 text-uppercase"><i className="fas fa-exclamation-triangle mr-1"></i> Tạm hết hàng</span>
                     </div>
                 )}
@@ -66,14 +92,16 @@ function ProductCard({ item }) {
                 </small>
 
                 {/* Tên dòng máy / Phụ kiện kim khí */}
-                <h6 className="card-title font-weight-bold text-dark text-truncate mb-2"
-                    title={item.name}
-                    style={{ fontSize: '15px', color: '#0D2C54', minHeight: '22px' }}>
-                    {item.name}
-                </h6>
+                <Link to={`/product/${item.id}`} className="text-decoration-none">
+                    <h6 className="card-title font-weight-bold text-dark text-truncate mb-2"
+                        title={item.name}
+                        style={{ fontSize: '14px', color: '#0D2C54', minHeight: '22px' }}>
+                        {item.name}
+                    </h6>
+                </Link>
 
                 {/* Giá tiền niêm yết sản phẩm */}
-                <p className="card-text font-weight-bold text-danger mb-3" style={{ fontSize: '17px' }}>
+                <p className="card-text font-weight-bold text-danger mb-3" style={{ fontSize: '16px' }}>
                     {formatCurrency(item.price)}
                 </p>
 
@@ -83,7 +111,7 @@ function ProductCard({ item }) {
                     <Link
                         to={`/product/${item.id}`}
                         className="btn btn-sm btn-outline-secondary font-weight-bold px-2 py-2 d-flex align-items-center justify-content-center mr-1"
-                        style={{ borderRadius: '4px', flex: 1, fontSize: '13px', border: '1px solid #ced4da' }}
+                        style={{ borderRadius: '4px', flex: 1, fontSize: '12.5px', border: '1px solid #ced4da' }}
                     >
                         <i className="fas fa-info-circle mr-1"></i> Xem thông số
                     </Link>
@@ -93,16 +121,19 @@ function ProductCard({ item }) {
                         className="btn btn-sm text-white font-weight-bold px-2 py-2 ml-1 d-flex align-items-center justify-content-center"
                         style={{
                             borderRadius: '4px',
-                            backgroundColor: item.stockQuantity === 0 ? '#6c757d' : '#FF6B35',
-                            borderColor: item.stockQuantity === 0 ? '#6c757d' : '#FF6B35',
+                            backgroundColor: item.stockQuantity === 0 ? '#dee2e6' : '#FF6B35',
+                            borderColor: item.stockQuantity === 0 ? '#dee2e6' : '#FF6B35',
+                            color: item.stockQuantity === 0 ? '#868e96' : '#fff',
                             flex: 1.2,
-                            fontSize: '13px',
+                            fontSize: '12.5px',
+                            border: 'none',
                             boxShadow: item.stockQuantity === 0 ? 'none' : '0 2px 6px rgba(255, 107, 53, 0.2)'
                         }}
-                        onClick={() => alert(`Đã thêm thiết bị [${item.name}] vào giỏ vật tư!`)}
+                        /* 💡 ĐÃ CẬP NHẬT: Thay thế hàm alert cũ bằng hàm click lưu localStorage */
+                        onClick={handleAddToCartClick}
                         disabled={item.stockQuantity === 0}
                     >
-                        <i className="fas fa-cart-plus mr-1"></i> Đặt mua ngay
+                        <i className="fas fa-shopping-cart mr-1"></i> Đặt mua ngay
                     </button>
                 </div>
             </div>

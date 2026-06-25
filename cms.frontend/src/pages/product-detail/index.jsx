@@ -1,4 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿// src/pages/product-detail/index.jsx
+// Ten: Le Thanh Ho | MSSV: 2123110125 | Lop: CCQ2311D
+
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import productService from '../../services/productService';
 
@@ -22,6 +25,7 @@ function ProductDetail() {
                 // Đề phòng trường hợp C# trả về object bọc mảng hoặc dữ liệu gốc
                 const cleanData = data?.$values ? data.$values[0] : data;
                 setProduct(cleanData);
+                setQuantity(1); // Reset lại số lượng mua bằng 1 khi đổi máy
             } catch (error) {
                 console.error("Không thể tải thông tin chi tiết thiết bị:", error);
             } finally {
@@ -41,6 +45,46 @@ function ProductDetail() {
     const handleQuantityChange = (type) => {
         if (type === 'decrease' && quantity > 1) setQuantity(quantity - 1);
         if (type === 'increase' && quantity < (product?.stockQuantity || 1)) setQuantity(quantity + 1);
+    };
+
+    // 💡 LÔGIC MỚI: Thêm thiết bị đính kèm số lượng mua thực tế vào LocalStorage
+    const handleAddToCart = () => {
+        if (!product) return;
+
+        // Rút giỏ hàng hiện tại ở máy khách ra
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        // Tìm xem thiết bị cơ khí này đã nằm trong giỏ hay chưa
+        const existingItem = cart.find(item => item.productId === product.id);
+
+        if (existingItem) {
+            // Nếu có rồi, cộng dồn thêm số lượng thợ vừa chọn trên ô input
+            const totalQty = existingItem.quantity + quantity;
+
+            // Chốt chặn không cho vượt quá kho hàng thực tế của C#
+            if (totalQty > product.stockQuantity) {
+                alert(`Không thể thêm! Số lượng trong giỏ (${existingItem.quantity}) + số lượng chọn thêm (${quantity}) đã vượt quá tồn kho hiện tại của tiệm (${product.stockQuantity} máy).`);
+                return;
+            }
+            existingItem.quantity = totalQty;
+        } else {
+            // Nếu chưa có, đẩy Object linh kiện mới vào mảng
+            cart.push({
+                productId: product.id,
+                name: product.name,
+                price: product.price,
+                imageUrl: product.imageUrl,
+                quantity: quantity // Nhận số lượng động
+            });
+        }
+
+        // Ghi dữ liệu mới đè lại vào bộ nhớ máy trình duyệt
+        localStorage.setItem('cart', JSON.stringify(cart));
+
+        // 🔄 Bắn tín hiệu đồng bộ để Icon giỏ hàng trên thanh Header tự động nhảy số theo
+        window.dispatchEvent(new Event('storage'));
+
+        alert(`Đã thêm thành công [${quantity}] máy [${product.name}] vào giỏ vật tư!`);
     };
 
     if (loading) {
@@ -63,19 +107,19 @@ function ProductDetail() {
 
     return (
         <div className="container my-5">
-            {/* Thanh điều hướng Breadcrumb nhỏ */}
-            <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb bg-transparent p-0 small">
-                    <li class="breadcrumb-item"><Link to="/" className="text-decoration-none text-muted">Trang chủ</Link></li>
-                    <li class="breadcrumb-item"><Link to="/shop" className="text-decoration-none text-muted">Dụng cụ & Máy móc</Link></li>
-                    <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">{product.name}</li>
+            {/* Thanh điều hướng Breadcrumb nhỏ - Đã sửa class thành className chuẩn React */}
+            <nav aria-label="breadcrumb" className="mb-4">
+                <ol className="breadcrumb bg-transparent p-0 small">
+                    <li className="breadcrumb-item"><Link to="/" className="text-decoration-none text-muted">Trang chủ</Link></li>
+                    <li className="breadcrumb-item"><Link to="/shop" className="text-decoration-none text-muted">Dụng cụ &amp; Máy móc</Link></li>
+                    <li className="breadcrumb-item active text-dark fw-bold" aria-current="page">{product.name}</li>
                 </ol>
             </nav>
 
             <div className="row g-5">
                 {/* KHỐI 1: HÌNH ẢNH THIẾT BỊ (Bên trái) */}
-                <div className="col-md-6 col-12">
-                    <div className="p-3 border rounded bg-white d-flex align-items-center justify-content-center" style={{ height: '420px' }}>
+                <div className="col-md-6 col-12 mb-4">
+                    <div className="p-4 border rounded bg-white d-flex align-items-center justify-content-center shadow-sm" style={{ height: '420px' }}>
                         <img
                             src={product.imageUrl ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${IMAGE_BASE_URL}${product.imageUrl}`) : "https://images.unsplash.com/photo-1534224039826-c7a0dea0e66a?w=500"}
                             alt={product.name}
@@ -87,11 +131,11 @@ function ProductDetail() {
 
                 {/* KHỐI 2: THÔNG SỐ VÀ ĐẶT MUA SẢN PHẨM (Bên phải) */}
                 <div className="col-md-6 col-12">
-                    <div className="product-detail-info">
+                    <div className="product-detail-info bg-white p-4 border rounded shadow-sm">
                         {/* Tên thiết bị cơ khí */}
-                        <h2 className="font-weight-bold mb-2" style={{ color: '#0D2C54' }}>{product.name}</h2>
+                        <h3 className="font-weight-bold mb-2" style={{ color: '#0D2C54', fontSize: '24px' }}>{product.name}</h3>
 
-                        {/* Trạng thái kho hàng Linh Xuân */}
+                        {/* Trạng thái kho hàng */}
                         <div className="mb-3">
                             {product.stockQuantity > 0 ? (
                                 <span className="badge bg-success text-white px-2 py-1">
@@ -105,16 +149,18 @@ function ProductDetail() {
                         </div>
 
                         {/* Giá tiền niêm yết lớn rực rỡ */}
-                        <h3 className="text-danger font-weight-bold mb-4" style={{ fontSize: '28px' }}>
+                        <h4 className="text-danger font-weight-bold mb-4" style={{ fontSize: '26px' }}>
                             {formatCurrency(product.price)}
-                        </h3>
+                        </h4>
 
                         <hr />
 
                         {/* Đoạn mô tả kỹ thuật / tính năng máy */}
                         <div className="my-4">
-                            <h6 className="font-weight-bold text-dark text-uppercase"><i className="fas fa-file-alt text-secondary mr-2"></i>Mô tả sản phẩm & Thông số kĩ thuật:</h6>
-                            <p className="text-secondary text-justify mt-2" style={{ fontSize: '14px', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                            <h6 className="font-weight-bold text-dark text-uppercase small" style={{ letterSpacing: '0.5px' }}>
+                                <i className="fas fa-file-alt text-secondary mr-2"></i>Mô tả sản phẩm &amp; Thông số kĩ thuật:
+                            </h6>
+                            <p className="text-secondary text-justify mt-2" style={{ fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
                                 {product.description || "Thiết bị công cụ cầm tay chuyên dụng phân phối chính hãng bởi LeThanhHo.Tools. Sản phẩm được sản xuất trên dây chuyền công nghệ hiện đại, kết cấu cơ khí chính xác, khả năng chịu tải cao và bền bỉ trong môi trường công xưởng."}
                             </p>
                         </div>
@@ -125,21 +171,21 @@ function ProductDetail() {
                         {product.stockQuantity > 0 && (
                             <div className="order-section mt-4">
                                 <div className="d-flex align-items-center mb-4">
-                                    <span className="font-weight-bold mr-3 text-secondary" style={{ fontSize: '14px' }}>Số lượng mua:</span>
+                                    <span className="font-weight-bold mr-3 text-secondary small">Số lượng mua:</span>
                                     {/* Cụm nút bấm tăng giảm số lượng */}
-                                    <div className="input-group" style={{ width: '130px' }}>
-                                        <button className="btn btn-outline-secondary px-3" type="button" onClick={() => handleQuantityChange('decrease')}>-</button>
-                                        <input type="text" className="form-control text-center bg-white font-weight-bold" value={quantity} readOnly />
-                                        <button className="btn btn-outline-secondary px-3" type="button" onClick={() => handleQuantityChange('increase')}>+</button>
+                                    <div className="input-group input-group-sm" style={{ width: '110px' }}>
+                                        <button className="btn btn-outline-secondary font-weight-bold" type="button" onClick={() => handleQuantityChange('decrease')}>-</button>
+                                        <input type="text" className="form-control text-center bg-white font-weight-bold p-0" value={quantity} readOnly />
+                                        <button className="btn btn-outline-secondary font-weight-bold" type="button" onClick={() => handleQuantityChange('increase')}>+</button>
                                     </div>
                                 </div>
 
-                                <div className="d-flex gap-3">
+                                <div className="d-flex">
                                     {/* Nút Thêm vào giỏ vật tư */}
                                     <button
-                                        className="btn btn-lg text-white font-weight-bold px-4 py-3"
-                                        style={{ backgroundColor: '#FF6B35', borderColor: '#FF6B35', borderRadius: '4px', flexGrow: 1 }}
-                                        onClick={() => alert(`Đã thêm thành công [${quantity}] máy [${product.name}] vào giỏ hàng!`)}
+                                        className="btn btn-block text-white font-weight-bold text-uppercase py-3"
+                                        style={{ backgroundColor: '#FF6B35', borderColor: '#FF6B35', borderRadius: '4px', fontSize: '13px', letterSpacing: '0.5px' }}
+                                        onClick={handleAddToCart}
                                     >
                                         <i className="fas fa-cart-plus mr-2"></i> THÊM VÀO GIỎ HÀNG
                                     </button>
@@ -148,7 +194,7 @@ function ProductDetail() {
                         )}
 
                         {/* Các cam kết an tâm mua hàng kỹ thuật */}
-                        <div className="mt-4 p-3 bg-light rounded border" style={{ fontSize: '13px' }}>
+                        <div className="mt-4 p-3 bg-light rounded border" style={{ fontSize: '12.5px' }}>
                             <div className="row text-secondary">
                                 <div className="col-6 mb-2"><i className="fas fa-shield-alt text-success mr-2"></i>Bảo hành đổi mới 7 ngày</div>
                                 <div className="col-6 mb-2"><i className="fas fa-wrench text-success mr-2"></i>Thử máy đạt chuẩn mới trả tiền</div>

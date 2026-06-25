@@ -1,0 +1,156 @@
+﻿@* Ten: Le Thanh Ho | MSSV: 2123110125 | Lop: CCQ2311D *@
+@model CMS.Data.Entities.Banner
+
+@{
+    ViewData["Title"] = "Thêm Banner";
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm me-3">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+    <h4 class="fw-bold mb-0">
+        <i class="bi bi-image me-2 text-primary"></i>Thêm Banner Mới
+    </h4>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Vui lòng kiểm tra lại thông tin:</strong>
+        <ul class="mb-0 mt-1">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">Thông tin banner</h6>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold">
+                            Tiêu đề <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Title" class="form-control"
+                               placeholder="Vd: Khuyến mãi mùa hè..." autocomplete="off" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LinkUrl" class="form-label fw-semibold">
+                            Link điều hướng <small class="text-muted fw-normal">(không bắt buộc)</small>
+                        </label>
+                        <input asp-for="LinkUrl" class="form-control"
+                               placeholder="/san-pham/khuyen-mai hoặc https://..." autocomplete="off" />
+                        <div class="form-text">Khi người dùng click vào banner sẽ chuyển tới link này.</div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="DisplayOrder" class="form-label fw-semibold">
+                                Thứ tự hiển thị
+                            </label>
+                            <input asp-for="DisplayOrder" type="number" min="0"
+                                   class="form-control" value="0" />
+                            <div class="form-text">Số nhỏ hiển thị trước.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold d-block">Trạng thái</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox"
+                                       asp-for="IsActive" role="switch" style="width:3em; height:1.5em;" />
+                                <label class="form-check-label ms-2" asp-for="IsActive">
+                                    Hiển thị ngay sau khi tạo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                   
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Hình ảnh banner <span class="text-danger">*</span>
+                        </label>
+                        <div class="border rounded p-3 text-center position-relative"
+                             style="cursor:pointer; border-style:dashed !important; border-color:#dee2e6;">
+                            <input type="file" name="uploadImage" id="uploadImage"
+                                   accept=".jpg,.jpeg,.png,.gif,.webp"
+                                   class="position-absolute top-0 start-0 w-100 h-100 opacity-0"
+                                   style="cursor:pointer; z-index:2;"
+                                   onchange="previewUpload(this)" />
+                            <div id="uploadPlaceholder">
+                                <i class="bi bi-cloud-upload text-muted" style="font-size:2rem;"></i>
+                                <p class="mb-0 text-muted small mt-1">
+                                    Kéo thả hoặc <span class="text-primary">chọn ảnh</span><br>
+                                    <span style="font-size:11px;">Khuyến nghị tỉ lệ ngang 16:5 hoặc 1920x600px</span>
+                                </p>
+                            </div>
+                            <img id="previewImg" src="" alt="Preview"
+                                 class="img-fluid rounded d-none"
+                                 style="max-height:160px; object-fit:cover;" />
+                        </div>
+                        <span class="text-danger small">
+                            @ViewData.ModelState["uploadImage"]?.Errors.FirstOrDefault()?.ErrorMessage
+                        </span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i> Lưu banner
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-lg me-1"></i> Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">Xem trước</h6>
+            </div>
+            <div class="card-body text-center p-4" id="sidePreview">
+                <i class="bi bi-image text-muted" style="font-size:3rem; opacity:0.3;"></i>
+                <p class="small text-muted mt-2">Chưa có ảnh</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function previewUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const src = e.target.result;
+                    document.getElementById('uploadPlaceholder').classList.add('d-none');
+                    const img = document.getElementById('previewImg');
+                    img.src = src;
+                    img.classList.remove('d-none');
+                    document.getElementById('sidePreview').innerHTML =
+                        `<img src="${src}" class="img-fluid rounded shadow-sm w-100" style="object-fit:cover; max-height:200px;">
+                         <p class="small text-muted mt-2 mb-0">${input.files[0].name}</p>`;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}
