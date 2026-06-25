@@ -1,17 +1,15 @@
 ﻿/*
- Ten: Le Thanh Ho
- MSSV: 2123110125
- Lop: CCQ2311D
+ Ten: Le Thanh Ho | MSSV: 2123110125 | Lop: CCQ2311D
 */
 using CMS.Data;
 using CMS.Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Authorization; // Cần thêm namespace này
-
-
 
 namespace CMS.Backend.Controllers
 {
@@ -19,8 +17,9 @@ namespace CMS.Backend.Controllers
     public class UserController : Controller
     {
         private readonly ApplicationDbContext _context;
+        public UserController(ApplicationDbContext context) => _context = context;
 
-        // Hàm hash mật khẩu SHA256
+        // Hàm hash mật khẩu SHA256 đồng bộ hệ thống
         private string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
@@ -28,22 +27,17 @@ namespace CMS.Backend.Controllers
             return Convert.ToBase64String(bytes);
         }
 
-        public UserController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
         // GET: /User/Index
         public IActionResult Index()
         {
-            var users = _context.Users.ToList();
+            var users = _context.Users.ToList(); // Quản lý nội bộ bảng Users nhân viên
             return View(users);
         }
 
         // GET: /User/Create
         public IActionResult Create()
         {
-            ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" });
+            ViewBag.Roles = new SelectList(new[] { "Admin", "Nhân viên kho", "Kế toán" });
             return View();
         }
 
@@ -52,87 +46,75 @@ namespace CMS.Backend.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(User model, string Password)
         {
-            ModelState.Remove("PasswordHash"); // Hash sẽ tự tạo
-
+            ModelState.Remove("PasswordHash");
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" });
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Nhân viên kho", "Kế toán" });
                 return View(model);
             }
 
-            // Kiểm tra username đã tồn tại chưa
-            bool isDuplicate = _context.Users
-                .Any(u => u.Username.ToLower() == model.Username.ToLower());
-
-            if (isDuplicate)
+            if (_context.Users.Any(u => u.Username.ToLower() == model.Username.ToLower()))
             {
-                ModelState.AddModelError("Username", "Tên đăng nhập này đã tồn tại");
-                ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" });
+                ModelState.AddModelError("Username", "Tên đăng nhập nội bộ này đã tồn tại!");
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Nhân viên kho", "Kế toán" });
                 return View(model);
             }
 
             if (string.IsNullOrWhiteSpace(Password))
             {
-                ModelState.AddModelError("Password", "Mật khẩu không được để trống");
-                ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" });
+                ModelState.AddModelError("Password", "Mật khẩu hệ thống không được để trống");
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Nhân viên kho", "Kế toán" });
                 return View(model);
             }
 
-            try
-            {
-                model.PasswordHash = HashPassword(Password);
-                _context.Users.Add(model);
-                _context.SaveChanges();
-                TempData["SuccessMessage"] = $"Đã thêm người dùng \"{model.FullName}\" thành công!";
-                return RedirectToAction("Index");
-            }
-            catch (Exception)
-            {
-                ModelState.AddModelError("", "Đã xảy ra lỗi khi lưu dữ liệu. Vui lòng thử lại.");
-                ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" });
-                return View(model);
-            }
+            model.PasswordHash = HashPassword(Password);
+            _context.Users.Add(model);
+            _context.SaveChanges();
+            TempData["SuccessMessage"] = $"Đã thêm nhân viên \"{model.FullName}\" thành công!";
+            return RedirectToAction("Index");
         }
 
+        // ── 💡 ĐÃ BỔ SUNG: HÀM EDIT (GET) — LẤY THÔNG TIN ĐỂ CHỈNH SỬA ──
         // GET: /User/Edit/5
         public IActionResult Edit(int id)
         {
             var user = _context.Users.Find(id);
             if (user == null)
             {
-                TempData["ErrorMessage"] = "Không tìm thấy người dùng cần sửa.";
+                TempData["ErrorMessage"] = "Không tìm thấy tài khoản nhân viên nội bộ cần sửa.";
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" }, user.Role);
+            // Đổ lại danh sách Role nội bộ vào Dropdown, chọn sẵn Role hiện tại của User
+            ViewBag.Roles = new SelectList(new[] { "Admin", "Nhân viên kho", "Kế toán" }, user.Role);
             return View(user);
         }
 
+        // ── 💡 ĐÃ BỔ SUNG: HÀM EDIT (POST) — LƯU DỮ LIỆU CHỈNH SỬA XUỐNG DB ──
         // POST: /User/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, User model, string NewPassword)
         {
-            if (id != model.Id)
-                return BadRequest();
+            if (id != model.Id) return BadRequest();
 
             ModelState.Remove("PasswordHash");
             ModelState.Remove("NewPassword");
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" }, model.Role);
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Nhân viên kho", "Kế toán" }, model.Role);
                 return View(model);
             }
 
-            // Kiểm tra trùng username (trừ chính nó)
+            // Kiểm tra trùng tên đăng nhập hệ thống (trừ chính nó)
             bool isDuplicate = _context.Users
                 .Any(u => u.Username.ToLower() == model.Username.ToLower() && u.Id != id);
 
             if (isDuplicate)
             {
-                ModelState.AddModelError("Username", "Tên đăng nhập này đã tồn tại");
-                ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" }, model.Role);
+                ModelState.AddModelError("Username", "Tên đăng nhập hệ thống này đã tồn tại");
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Nhân viên kho", "Kế toán" }, model.Role);
                 return View(model);
             }
 
@@ -141,30 +123,34 @@ namespace CMS.Backend.Controllers
                 var user = _context.Users.Find(id);
                 if (user == null)
                 {
-                    TempData["ErrorMessage"] = "Không tìm thấy người dùng cần sửa.";
+                    TempData["ErrorMessage"] = "Không tìm thấy tài khoản nhân viên nội bộ cần sửa.";
                     return RedirectToAction("Index");
                 }
 
+                // Cập nhật các trường thông tin nội bộ
                 user.Username = model.Username;
                 user.FullName = model.FullName;
                 user.Role = model.Role;
 
-                // Chỉ đổi mật khẩu nếu nhập mới
+                // Chỉ băm và cập nhật mật khẩu mới SHA256 nếu Admin nhập vào ô trống
                 if (!string.IsNullOrWhiteSpace(NewPassword))
+                {
                     user.PasswordHash = HashPassword(NewPassword);
+                }
 
                 _context.SaveChanges();
-                TempData["SuccessMessage"] = $"Đã cập nhật người dùng \"{user.FullName}\" thành công!";
+                TempData["SuccessMessage"] = $"Đã cập nhật thông tin nhân viên \"{user.FullName}\" thành công!";
                 return RedirectToAction("Index");
             }
             catch (Exception)
             {
-                ModelState.AddModelError("", "Đã xảy ra lỗi khi lưu dữ liệu. Vui lòng thử lại.");
-                ViewBag.Roles = new SelectList(new[] { "Admin", "Khách hàng" }, model.Role);
+                ModelState.AddModelError("", "Đã xảy ra lỗi trong quá trình lưu dữ liệu hệ thống.");
+                ViewBag.Roles = new SelectList(new[] { "Admin", "Nhân viên kho", "Kế toán" }, model.Role);
                 return View(model);
             }
         }
 
+        // ── 💡 ĐÃ BỔ SUNG: HÀM DELETE (POST) — XÓA TÀI KHOẢN KHỎI DB ──
         // POST: /User/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -175,17 +161,25 @@ namespace CMS.Backend.Controllers
                 var user = _context.Users.Find(id);
                 if (user == null)
                 {
-                    TempData["ErrorMessage"] = "Không tìm thấy người dùng cần xóa.";
+                    TempData["ErrorMessage"] = "Không tìm thấy nhân viên hệ thống cần xóa.";
+                    return RedirectToAction("Index");
+                }
+
+                // (Bọc lót an toàn): Không cho phép Admin tự xóa chính tài khoản mình đang đăng nhập
+                var currentAdminName = User.Identity?.Name;
+                if (user.Username.Equals(currentAdminName, StringComparison.OrdinalIgnoreCase))
+                {
+                    TempData["ErrorMessage"] = "Lỗi bảo mật: Bạn không được phép tự xóa tài khoản quản trị của chính mình khi đang phiên làm việc!";
                     return RedirectToAction("Index");
                 }
 
                 _context.Users.Remove(user);
                 _context.SaveChanges();
-                TempData["SuccessMessage"] = $"Đã xóa người dùng \"{user.FullName}\" thành công!";
+                TempData["SuccessMessage"] = $"Đã xóa tài khoản nhân viên \"{user.FullName}\" thành công!";
             }
             catch (Exception)
             {
-                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi xóa. Vui lòng thử lại.";
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi ngoại lệ khi thực hiện xóa dữ liệu.";
             }
 
             return RedirectToAction("Index");

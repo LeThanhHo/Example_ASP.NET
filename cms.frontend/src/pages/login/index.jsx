@@ -23,18 +23,21 @@ function LoginPage() {
         try {
             const res = await axios.post('https://localhost:7116/api/AuthApi/login', credentials);
 
-            // 🔒 BẪY BẢO MẬT FRONTEND: Kiểm tra xem tài khoản đăng nhập có phải "Khách hàng" hay không
+            // 🔒 BẪY BẢO MẬT FRONTEND: Kiểm tra vai trò tài khoản
             if (res.data.role !== "Khách hàng") {
                 setErrorMsg("Tài khoản quản trị viên không được dùng để mua sắm. Vui lòng dùng tài khoản Khách hàng!");
                 setLoading(false);
                 return;
             }
 
-            // Nếu chuẩn vai trò Khách hàng -> Tiến hành lưu trạng thái mua hàng
+            // 💡 GIẢI PHÁP: Dọn dẹp bộ nhớ đệm cũ tránh xung đột tài khoản Admin
+            localStorage.clear();
+
+            // Tiến hành lưu trạng thái mua hàng mới
             localStorage.setItem('customerId', res.data.customerId);
             localStorage.setItem('customerName', res.data.fullName);
 
-            // Điều hướng về trang chủ mua sắm dụng cụ
+            // Điều hướng thẳng về trang chủ mua sắm
             window.location.href = "/";
         } catch (err) {
             setErrorMsg(err.response?.data?.message || 'Sai tài khoản hoặc mật khẩu bẫy bảo mật!');
@@ -42,6 +45,7 @@ function LoginPage() {
             setLoading(false);
         }
     };
+
     return (
         <div className="container my-5 d-flex justify-content-center py-5">
             <div className="card shadow-sm border-0 p-4" style={{ maxWidth: '400px', width: '100%', borderRadius: '8px' }}>
@@ -56,15 +60,23 @@ function LoginPage() {
                         <label className="form-label font-weight-bold small">Email đăng nhập</label>
                         <input type="email" name="email" className="form-control form-control-sm" required onChange={handleChange} placeholder="name@example.com" />
                     </div>
-                    <div className="form-group mb-4">
+                    <div className="form-group mb-2">
                         <label className="form-label font-weight-bold small">Mật khẩu kỹ thuật</label>
                         <input type="password" name="password" className="form-control form-control-sm" required onChange={handleChange} placeholder="••••••••" />
+                    </div>
+
+                    {/* Lối tắt khôi phục mật khẩu thông minh nằm gọn sát lề phải */}
+                    <div className="text-right mb-4 small">
+                        <Link to="/forgot-password" className="text-decoration-none text-muted font-weight-medium">
+                            Quên mật khẩu?
+                        </Link>
                     </div>
 
                     <button type="submit" className="btn btn-block text-white font-weight-bold text-uppercase py-2" style={{ backgroundColor: '#0D2C54' }} disabled={loading}>
                         {loading ? 'Đang xác thực...' : 'Vào hệ thống'}
                     </button>
                 </form>
+
                 <div className="text-center mt-3 small">
                     Chưa có tài khoản? <Link to="/register" className="text-decoration-none font-weight-bold" style={{ color: '#FF6B35' }}>Đăng ký thành viên</Link>
                 </div>

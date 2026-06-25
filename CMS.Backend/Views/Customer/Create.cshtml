@@ -1,0 +1,63 @@
+﻿@model CMS.Data.Entities.Customer
+@{
+    ViewData["Title"] = "Thêm mới khách hàng";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container py-3" style="max-width: 700px;">
+    <div class="mb-3">
+        <a href="@Url.Action("Index", "Customer")" class="btn btn-link p-0 text-decoration-none text-secondary font-weight-bold small">
+            <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white py-3">
+            <h6 class="m-0 font-weight-bold"><i class="fas fa-user-plus mr-2 text-warning"></i>THÊM MỚI TÀI KHOẢN KHÁCH HÀNG</h6>
+        </div>
+        <div class="card-body bg-white p-4">
+
+            <form action="@Url.Action("Create", "Customer")" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="form-group mb-3">
+                    <label class="form-label font-weight-bold small text-secondary">Họ và tên thợ / Đối tác <span class="text-danger">*</span></label>
+                    <input type="text" asp-for="FullName" class="form-control form-control-sm" required placeholder="Nhập tên khách mua hàng..." />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label font-weight-bold small text-secondary">Địa chỉ Email tài khoản <span class="text-danger">*</span></label>
+                    <input type="email" asp-for="Email" class="form-control form-control-sm" required placeholder="example@gmail.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label class="form-label font-weight-bold small text-secondary">Số điện thoại liên hệ</label>
+                        <input type="text" asp-for="Phone" class="form-control form-control-sm" placeholder="03xxxxxxxx..." />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label class="form-label font-weight-bold small text-secondary">Mật khẩu khởi tạo <span class="text-danger">*</span></label>
+                        <input type="password" asp-for="Password" class="form-control form-control-sm" required placeholder="Mật khẩu đăng nhập thợ..." />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-label font-weight-bold small text-secondary">Địa chỉ xưởng nhận thiết bị vật tư</label>
+                    <input type="text" asp-for="Address" class="form-control form-control-sm" placeholder="Số nhà, tên đường, Thủ Đức, HCM..." />
+                    <span asp-validation-for="Address" class="text-danger small"></span>
+                </div>
+
+                <div class="text-danger small mb-3">@Html.ValidationSummary(true)</div>
+
+                <button type="submit" class="btn btn-warning text-white btn-sm font-weight-bold text-uppercase py-2 px-4 shadow-sm">
+                    <i class="fas fa-check-circle mr-1"></i> Khởi tạo tài khoản
+                </button>
+            </form>
+
+        </div>
+    </div>
+</div>

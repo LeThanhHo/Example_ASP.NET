@@ -1,0 +1,78 @@
+﻿@model IEnumerable<CMS.Data.Entities.Customer>
+@{
+    ViewData["Title"] = "Quản lý Đối tác Khách hàng";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <h5 class="m-0 font-weight-bold"><i class="fas fa-users mr-2 text-warning"></i>QUẢN LÝ TÀI KHOẢN KHÁCH HÀNG</h5>
+            <a href="@Url.Action("Create", "Customer")" class="btn btn-warning btn-sm font-weight-bold text-white">
+                <i class="fas fa-user-plus mr-1"></i> Thêm khách hàng mới
+            </a>
+        </div>
+        <div class="card-body bg-white">
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success small py-2">@TempData["SuccessMessage"]</div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger small py-2">@TempData["ErrorMessage"]</div>
+            }
+
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle border" style="font-size: 14px;">
+                    <thead class="thead-dark text-uppercase" style="font-size: 12.5px;">
+                        <tr>
+                            <th style="width: 80px;">Mã số</th>
+                            <th>Thông tin thợ / Đối tác</th>
+                            <th>Thông tin liên hệ</th>
+                            <th>Địa chỉ xưởng nhận máy</th>
+                            <th style="width: 180px;" class="text-center">Thao tác quản trị</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Chưa có dữ liệu khách hàng nào được ghi nhận trên hệ thống.</td>
+                            </tr>
+                        }
+                        @foreach (var customer in Model)
+                        {
+                            <tr>
+                                <td class="font-weight-bold text-secondary">#@customer.Id</td>
+                                <td>
+                                    <div class="font-weight-bold text-dark">@customer.FullName</div>
+                                    <small class="badge bg-light text-secondary border font-weight-normal">Vai trò: Khách hàng</small>
+                                </td>
+                                <td>
+                                    <div class="mb-1"><i class="fas fa-envelope text-muted mr-1.5" style="width: 14px;"></i>@customer.Email</div>
+                                    <div><i class="fas fa-phone-alt text-muted mr-1.5" style="width: 14px;"></i>@(string.IsNullOrEmpty(customer.Phone) ? "Chưa cập nhật" : customer.Phone)</div>
+                                </td>
+                                <td>@(string.IsNullOrEmpty(customer.Address) ? "---" : customer.Address)</td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center style="gap: 5px;" style="gap: 5px;">
+                                        <a href="@Url.Action("Edit", "Customer", new { id = customer.Id })" class="btn btn-sm btn-outline-primary font-weight-bold px-2">
+                                            <i class="fas fa-edit mr-1"></i> Sửa
+                                        </a>
+
+                                        <form action="@Url.Action("Delete", "Customer", new { id = customer.Id })" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản khách hàng này không?');" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger font-weight-bold px-2">
+                                                <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

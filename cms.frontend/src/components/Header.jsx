@@ -61,10 +61,11 @@ function Header() {
                     <div className="top-bar-right ml-auto font-weight-semibold">
                         {authService.isAuthenticated() ? (
                             <div className="d-flex align-items-center" style={{ gap: '15px' }}>
-                                <span className="text-white">
-                                    <i className="fas fa-user-circle mr-1 text-warning" style={{ fontSize: '14px' }}></i>
-                                    Chào, <strong style={{ color: '#FFF' }}>{localStorage.getItem('customerName')}</strong>
-                                </span>
+                                {/* 💡 ĐÃ SỬA: Bọc cụm câu chào thành thẻ Link điều hướng về trang cá nhân /profile */}
+                                <Link to="/profile" className="text-white text-decoration-none auth-link-hover d-flex align-items-center" style={{ gap: '4px' }}>
+                                    <i className="fas fa-user-circle text-warning" style={{ fontSize: '14px' }}></i>
+                                    <span>Chào, <strong style={{ color: '#FFF' }}>{localStorage.getItem('customerName')}</strong></span>
+                                </Link>
                                 <span className="text-muted">|</span>
                                 <button
                                     className="btn btn-link text-white p-0 text-decoration-none small font-weight-bold btn-logout-hover"
@@ -150,10 +151,10 @@ function Header() {
                                     transition: 'all 0.2s'
                                 }}
                                 onMouseOver={(e) => {
+                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
                                     e.currentTarget.style.borderColor = '#FF6B35';
                                     e.currentTarget.style.color = '#FF6B35';
                                 }}
-                                /* 💡 ĐÃ SỬA: Xóa dấu chấm dư thừa ở đầu dòng dưới đây */
                                 onMouseOut={(e) => {
                                     e.currentTarget.style.borderColor = '#E2E8F0';
                                     e.currentTarget.style.color = '#0D2C54';
@@ -181,58 +182,59 @@ function Header() {
                             </Link>
                         </div>
 
+                    </div>
                 </div>
             </div>
-        </div>
 
-            {/* TẦNG 3: THANH ĐIỀU HƯỚNG DANH MỤC TRANG WEB */ }
-    <div className="main-navigation bg-white py-0 border-bottom">
-        <div className="container">
-            <nav className="navbar navbar-expand p-0">
-                <ul className="navbar-nav d-flex flex-row flex-wrap m-0 p-0" style={{ listStyle: 'none' }}>
+            {/* TẦNG 3: THANH ĐIỀU HƯỚNG DANH MỤC TRANG WEB */}
+            <div className="main-navigation bg-white py-0 border-bottom">
+                <div className="container">
+                    <nav className="navbar navbar-expand p-0">
+                        <ul className="navbar-nav d-flex flex-row flex-wrap m-0 p-0" style={{ listStyle: 'none' }}>
 
-                    {/* Menu 1: Trang Chủ */}
-                    <li className="nav-item" style={{ marginRight: '35px' }}>
-                        <Link to="/" className={`nav-link py-3 px-0 position-relative text-decoration-none custom-nav-item ${isActive('/')}`} style={{ fontSize: '14.5px', color: '#1E293B', transition: 'color 0.2s' }}>
-                            <i className="fas fa-home text-muted mr-1.5" style={{ fontSize: '14px' }}></i> Trang Chủ
-                        </Link>
-                    </li>
+                            {/* Menu 1: Trang Chủ */}
+                            <li className="nav-item" style={{ marginRight: '35px' }}>
+                                <Link to="/" className={`nav-link py-3 px-0 position-relative text-decoration-none custom-nav-item ${isActive('/')}`} style={{ fontSize: '14.5px', color: '#1E293B', transition: 'color 0.2s' }}>
+                                    <i className="fas fa-home text-muted mr-1.5" style={{ fontSize: '14px' }}></i> Trang Chủ
+                                </Link>
+                            </li>
 
-                    {/* Menu 2: Dụng Cụ & Máy Móc */}
-                    <li className="nav-item" style={{ marginRight: '35px' }}>
-                        <Link to="/shop" className={`nav-link py-3 px-0 position-relative text-decoration-none custom-nav-item ${isActive('/shop')}`} style={{ fontSize: '14.5px', color: '#1E293B', transition: 'color 0.2s' }}>
-                            <i className="fas fa-hammer text-muted mr-1.5" style={{ fontSize: '14px' }}></i> Dụng Cụ &amp; Máy Móc
-                        </Link>
-                    </li>
+                            {/* Menu 2: Dụng Cụ & Máy Móc */}
+                            <li className="nav-item" style={{ marginRight: '35px' }}>
+                                <Link to="/shop" className={`nav-link py-3 px-0 position-relative text-decoration-none custom-nav-item ${isActive('/shop')}`} style={{ fontSize: '14.5px', color: '#1E293B', transition: 'color 0.2s' }}>
+                                    <i className="fas fa-hammer text-muted mr-1.5" style={{ fontSize: '14px' }}></i> Dụng Cụ &amp; Máy Móc
+                                </Link>
+                            </li>
 
-                    {/* Menu 3: Cẩm nang hướng dẫn kỹ thuật */}
-                    <li className="nav-item" style={{ marginRight: '35px' }}>
-                        <Link to="/blog" className={`nav-link py-3 px-0 position-relative text-decoration-none custom-nav-item ${isActive('/blog')}`} style={{ fontSize: '14.5px', color: '#1E293B', transition: 'color 0.2s' }}>
-                            <i className="fas fa-book-open text-muted mr-1.5" style={{ fontSize: '14px' }}></i> Cẩm Nang Kỹ Thuật
-                        </Link>
-                    </li>
+                            {/* Menu 3: Cẩm nang hướng dẫn kỹ thuật */}
+                            <li className="nav-item" style={{ marginRight: '35px' }}>
+                                <Link to="/blog" className={`nav-link py-3 px-0 position-relative text-decoration-none custom-nav-item ${isActive('/blog')}`} style={{ fontSize: '14.5px', color: '#1E293B', transition: 'color 0.2s' }}>
+                                    <i className="fas fa-book-open text-muted mr-1.5" style={{ fontSize: '14px' }}></i> Cẩm Nang Kỹ Thuật
+                                </Link>
+                            </li>
 
-                    {/* Menu 4: Về chúng tôi (ĐÃ SỬA LỖI LOGIC ACTIVE TRÙNG BLOG) */}
-                    <li className="nav-item">
-                        <Link to="/about" className={`nav-link py-3 px-0 position-relative text-decoration-none custom-nav-item ${isActive('/about')}`} style={{ fontSize: '14.5px', color: '#1E293B', transition: 'color 0.2s' }}>
-                            <i className="fas fa-info-circle text-muted mr-1.5" style={{ fontSize: '14px' }}></i> Về Chúng Tôi
-                        </Link>
-                    </li>
+                            {/* Menu 4: Về chúng tôi */}
+                            <li className="nav-item" style={{ marginRight: '35px' }}>
+                                <Link to="/about" className={`nav-link py-3 px-0 position-relative text-decoration-none custom-nav-item ${isActive('/about')}`} style={{ fontSize: '14.5px', color: '#1E293B', transition: 'color 0.2s' }}>
+                                    <i className="fas fa-info-circle text-muted mr-1.5" style={{ fontSize: '14px' }}></i> Về Chúng Tôi
+                                </Link>
+                            </li>
 
-                </ul>
-            </nav>
-        </div>
-    </div>
+                           
 
-    {/* 💡 THÊM STYLE BỔ TRỢ ĐỂ NÂNG CẤP HOVER ĐỘNG CHO ĐỒ ÁN */ }
-    <style>{`
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            {/* STYLE BỔ TRỢ */}
+            <style>{`
                 .text-secondary-hover { color: #475569 !important; }
                 .text-secondary-hover:hover { color: #FF6B35 !important; text-decoration: none; }
                 .auth-link-hover { opacity: 0.9; transition: opacity 0.2s; }
                 .auth-link-hover:hover { opacity: 1; color: #FF6B35 !important; text-decoration: none; }
                 .btn-logout-hover:hover { color: #FF6B35 !important; opacity: 0.9; }
                 
-                /* Hiệu ứng gạch chân chạy dưới chân các mục menu khi hover giống các website lớn */
                 .custom-nav-item::after {
                     content: '';
                     position: absolute;

@@ -1,12 +1,11 @@
 ﻿/*
- Ten: Le Thanh Ho
- MSSV: 2123110125
+ Ten: Le Thanh Ho 
+ MSSV: 2123110125 
  Lop: CCQ2311D
 */
 using CMS.Data;
 using CMS.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -20,60 +19,43 @@ namespace CMS.Backend.Controllers.Api
         private readonly ApplicationDbContext _context;
         public CartApiController(ApplicationDbContext context) => _context = context;
 
-        /// <summary>API Tiếp nhận giỏ hàng và chốt đơn</summary>
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout([FromBody] CartCheckoutDto payload)
         {
-            // 🔒 1. SỬA ĐỔI RÀNG BUỘC: Kiểm tra tài khoản có tồn tại thực tế trong bảng Users không
             if (payload.CustomerId <= 0)
             {
-                return Unauthorized(new { message = "Ràng buộc hệ thống: Bạn phải đăng nhập tài khoản thành viên mới có thể thực hiện mua hàng!" });
+                return Unauthorized(new { message = "Ràng buộc hệ thống: Bạn phải đăng nhập mới có thể mua hàng!" });
             }
 
-            var user = await _context.Users.FindAsync(payload.CustomerId);
-            if (user == null)
-            {
-                return NotFound(new { message = "Lỗi bảo mật: Tài khoản thành viên không tồn tại trên hệ thống dữ liệu!" });
-            }
+            // 🔒 XÁC THỰC: Phải tồn tại trong bảng Customers biệt lập
+            var customer = await _context.Customers.FindAsync(payload.CustomerId);
+            if (customer == null) return NotFound(new { message = "Tài khoản khách hàng không hợp lệ!" });
 
-            // (Tùy chọn) Nếu bạn muốn chỉ cho phép tài khoản Role "Khách hàng" đặt đơn hàng:
-            if (user.Role != "Khách hàng" && user.Role != "Admin")
-            {
-                return Forbid();
-            }
-
-            if (payload.Items == null || payload.Items.Count == 0)
-            {
-                return BadRequest(new { message = "Giỏ hàng vật tư trống. Không thể khởi tạo đơn hàng!" });
-            }
+            if (payload.Items == null || payload.Items.Count == 0) return BadRequest(new { message = "Giỏ hàng trống." });
 
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    // 2. Tạo đơn hàng tổng (Order) -> Lưu user.Id chung vào cột CustomerId theo cấu trúc bảng cũ
                     var order = new Order
                     {
-                        CustomerId = user.Id,
-                        Status = 0, // Chờ duyệt
+                        CustomerId = customer.Id, // Khóa ngoại trỏ sang bảng Customers chuẩn chỉ
+                        Status = 0,
                         Notes = payload.Notes
                     };
                     _context.Orders.Add(order);
-                    await _context.SaveChangesAsync(); // Lưu trước để sinh ra Order.Id tự động
+                    await _context.SaveChangesAsync();
 
-                    // 3. Phân rã mảng sản phẩm trong giỏ hàng vào OrderDetail
                     foreach (var item in payload.Items)
                     {
                         var product = await _context.Products.FindAsync(item.ProductId);
-                        if (product == null) return BadRequest(new { message = $"Sản phẩm ID {item.ProductId} không còn tồn tại." });
+                        if (product == null) return BadRequest(new { message = "Sản phẩm không tồn tại." });
 
-                        // Kiểm tra kho hàng thực tế của tiệm cơ khí
                         if (product.StockQuantity < item.Quantity)
                         {
-                            return BadRequest(new { message = $"Thiết bị [{product.Name}] trong kho không đủ số lượng cung ứng (Còn lại: {product.StockQuantity} máy)." });
+                            return BadRequest(new { message = $"Vật tư [{product.Name}] trong kho không đủ cung ứng." });
                         }
 
-                        // Trừ trực tiếp số lượng tồn kho
                         product.StockQuantity -= item.Quantity;
 
                         var orderDetail = new OrderDetail
@@ -81,29 +63,29 @@ namespace CMS.Backend.Controllers.Api
                             OrderId = order.Id,
                             ProductId = item.ProductId,
                             Quantity = item.Quantity,
-                            UnitPrice = product.Price // Rút giá thực tế từ Database để tránh client sửa đổi giá ở Frontend
+                            UnitPrice = product.Price
                         };
                         _context.OrderDetails.Add(orderDetail);
                     }
 
                     await _context.SaveChangesAsync();
-                    await transaction.CommitAsync(); // Xác nhận giao dịch hoàn tất
+                    await transaction.CommitAsync();
 
-                    return Ok(new { message = "Đơn hàng của bạn đã được tiếp nhận thành công!", orderId = order.Id });
+                    return Ok(new { message = "Đặt hàng dụng cụ thành công!", orderId = order.Id });
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống trong quá trình chốt đơn: " + ex.Message });
+                    return StatusCode(500, new { message = "Lỗi chốt đơn: " + ex.Message });
                 }
             }
         }
     }
 
-    // Khai báo cấu trúc DTO nhận Payload từ ReactJS gửi sang
+    // ── 💡 ĐÃ THÊM ĐẦY ĐỦ CÁC CLASS DTO Ở ĐÂY ────────────────────────────
     public class CartCheckoutDto
     {
-        public int CustomerId { get; set; } // Đại diện cho UserId được gửi lên từ localStorage
+        public int CustomerId { get; set; }
         public string? Notes { get; set; }
         public List<CartItemDto> Items { get; set; }
     }

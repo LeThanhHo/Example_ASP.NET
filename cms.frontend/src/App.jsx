@@ -18,6 +18,8 @@ import About from './pages/about/index';                // Về Chúng Tôi - pa
 import LoginPage from './pages/login/index';
 import RegisterPage from './pages/register/index';
 import CartPage from './pages/cart/index';
+import CustomerProfilePage from './pages/profile';
+import ForgotPasswordPage from './pages/login/ForgotPassword';
 function App() {
     return (
         // Khởi tạo bộ định tuyến bao bọc toàn bộ ứng dụng Web
@@ -56,6 +58,8 @@ function App() {
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/cart" element={<CartPage />} />
+                        <Route path="/profile" element={<CustomerProfilePage />} />
+                        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                         {/* XỬ LÝ KỊCH BẢN TRANG LỖI 404 (Khi sinh viên gõ sai URL) */}
                         <Route path="*" element={
                             <div className="container text-center py-5 my-5">
