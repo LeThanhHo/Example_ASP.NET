@@ -6,32 +6,131 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <title>Không có quyền truy cập</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>403 - Không có quyền truy cập</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
     <style>
         body {
             min-height: 100vh;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .error-container {
+            max-width: 460px;
+            width: 100%;
+            padding: 2.5rem;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: transform 0.3s ease;
+        }
+
+            .error-container:hover {
+                transform: translateY(-2px);
+            }
+
+        .icon-wrapper {
+            width: 90px;
+            height: 90px;
+            background-color: #fef2f2;
+            color: #ef4444;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 2.75rem;
+            margin-bottom: 1.5rem;
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+
+        .btn-custom-primary {
+            background-color: #0d2c54;
+            border-color: #0d2c54;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+            .btn-custom-primary:hover {
+                background-color: #1e4475;
+                border-color: #1e4475;
+                color: #ffffff;
+                transform: translateY(-1px);
+            }
+
+        .btn-custom-secondary {
+            border-color: #cbd5e1;
+            color: #475569;
+            font-weight: 600;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+            .btn-custom-secondary:hover {
+                background-color: #f8fafc;
+                border-color: #94a3b8;
+                color: #1e293b;
+                transform: translateY(-1px);
+            }
+        /* 💡 ĐÃ SỬA: Thêm hai dấu @@ ở đầu để Razor hiểu đây là CSS Keyframes thuần túy */
+        @@keyframes pulse-subtle {
+            0% {
+                transform: scale(0.96);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.96);
+                opacity: 0.9;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="text-center">
-        <div style="font-size:5rem; color:#dc3545;">
-            <i class="bi bi-shield-x"></i>
+    <div class="container d-flex justify-content-center px-3">
+        <div class="error-container text-center">
+
+            <div class="icon-wrapper">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+
+            <h3 class="fw-bold text-dark mb-2" style="letter-spacing: -0.5px;">Không có quyền truy cập</h3>
+            <p class="text-secondary mb-4 mx-auto" style="max-width: 340px; font-size: 0.95rem; line-height: 1.5;">
+                Tài khoản hiện tại của bạn không đủ phân quyền kỹ thuật để truy cập vào phân hệ quản trị này.
+            </p>
+
+            <hr class="my-4" style="opacity: 0.08;" />
+
+            <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-custom-primary d-inline-flex align-items-center justify-content-center">
+                    <i class="bi bi-box-arrow-in-right me-2"></i> Đăng nhập lại
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-custom-secondary d-inline-flex align-items-center justify-content-center">
+                    <i class="bi bi-house me-2"></i> Về trang chủ
+                </a>
+            </div>
+
+            <div class="mt-4 pt-2">
+                <small class="text-muted" style="font-size: 11px; letter-spacing: 0.3px;">
+                    Mã lỗi bảo mật: <strong class="text-danger">HTTP 403 Forbidden</strong>
+                </small>
+            </div>
+
         </div>
-        <h2 class="fw-bold text-danger mt-2">Không có quyền truy cập</h2>
-        <p class="text-muted">Bạn không có quyền vào trang này.</p>
-        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
-            <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập lại
-        </a>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary ms-2">
-            <i class="bi bi-house me-1"></i> Về trang chủ
-        </a>
     </div>
 </body>
 </html>

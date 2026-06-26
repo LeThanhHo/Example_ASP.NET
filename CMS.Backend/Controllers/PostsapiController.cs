@@ -30,7 +30,10 @@ namespace CMS.Backend.Controllers.Api
                     p.ImageUrl,
                     p.CreatedDate,
                     CategoryName = p.Category.Name,
-                    p.CategoryId
+                    p.CategoryId,
+                   
+                    p.Content,
+                   
                 })
                 .ToList();
             return Ok(posts);

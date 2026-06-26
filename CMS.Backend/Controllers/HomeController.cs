@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace CMS.Backend.Controllers
 {
-    [Authorize(Roles = "Admin")]
+  
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;

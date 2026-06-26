@@ -92,9 +92,7 @@ function PostDetail() {
                     <span className="mr-3">
                         <i className="far fa-calendar-alt text-warning mr-1"></i> Đăng ngày: {formatDate(post.createdDate)}
                     </span>
-                    <span>
-                        <i className="far fa-user text-warning mr-1"></i> Biên tập: Ban kỹ thuật LeThanhHo
-                    </span>
+                   
                 </div>
 
                 {/* 4. Hình ảnh đại diện bài viết lấy từ wwwroot */}

@@ -9,10 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CMS.Backend.Controllers
 {
-    // Tạm thời comment Authorize để bạn dễ chạy thử nghiệm nghiệm thu đồ án
     // [Authorize(Roles = "Admin")] 
     public class CustomerController : Controller
     {
@@ -23,15 +24,23 @@ namespace CMS.Backend.Controllers
             _context = context;
         }
 
-        // GET: /Customer/Index (Trang hiển thị danh sách toàn bộ khách hàng)
+        // 💡 HÀM BĂM MẬT KHẨU SHA-256 ĐỒNG BỘ HỆ THỐNG
+        private string HashPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password)) return string.Empty;
+            using var sha256 = SHA256.Create();
+            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(bytes);
+        }
+
+        // GET: /Customer/Index
         public IActionResult Index()
         {
-            // Bốc dữ liệu từ bảng Customers thực tế
             var customers = _context.Customers.OrderBy(c => c.FullName).ToList();
             return View(customers);
         }
 
-        // GET: /Customer/Create (Trang giao diện thêm thủ công khách hàng)
+        // GET: /Customer/Create
         public IActionResult Create()
         {
             return View();
@@ -45,7 +54,6 @@ namespace CMS.Backend.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Kiểm tra trùng lặp Email khách hàng
             bool isDuplicate = _context.Customers
                 .Any(c => c.Email.ToLower() == model.Email.ToLower());
 
@@ -55,8 +63,17 @@ namespace CMS.Backend.Controllers
                 return View(model);
             }
 
+            if (string.IsNullOrWhiteSpace(model.Password))
+            {
+                ModelState.AddModelError("Password", "Mật khẩu không được để trống!");
+                return View(model);
+            }
+
             try
             {
+                // 💡 ĐÃ MÃ HÓA: Băm mật khẩu trước khi lưu vào Database thực tế
+                model.Password = HashPassword(model.Password);
+
                 _context.Customers.Add(model);
                 _context.SaveChanges();
                 TempData["SuccessMessage"] = $"Đã thêm tài khoản khách hàng \"{model.FullName}\" thành công!";
@@ -69,7 +86,7 @@ namespace CMS.Backend.Controllers
             }
         }
 
-        // GET: /Customer/Edit/5 (Trang chỉnh sửa thông tin thợ/khách hàng)
+        // GET: /Customer/Edit/5
         public IActionResult Edit(int id)
         {
             var customer = _context.Customers.Find(id);
@@ -78,15 +95,20 @@ namespace CMS.Backend.Controllers
                 TempData["ErrorMessage"] = "Không tìm thấy thông tin khách hàng cần chỉnh sửa.";
                 return RedirectToAction("Index");
             }
+            // Mẹo: Gán mật khẩu về rỗng ở giao diện để đảm bảo an toàn, tránh lộ chuỗi hash
+            customer.Password = string.Empty;
             return View(customer);
         }
 
         // POST: /Customer/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Customer model)
+        public IActionResult Edit(int id, Customer model, string NewPassword)
         {
             if (id != model.Id) return BadRequest();
+
+            // Tạm thời bỏ qua kiểm tra dữ liệu trường Password mặc định vì xử lý qua ô NewPassword
+            ModelState.Remove("Password");
 
             if (!ModelState.IsValid) return View(model);
 
@@ -104,12 +126,16 @@ namespace CMS.Backend.Controllers
                 var customer = _context.Customers.Find(id);
                 if (customer == null) return NotFound();
 
-                // Cập nhật các trường dữ liệu theo đúng thực thể Customer của bạn
                 customer.FullName = model.FullName;
                 customer.Email = model.Email;
                 customer.Phone = model.Phone;
                 customer.Address = model.Address;
-                customer.Password = model.Password; // Giữ nguyên mật khẩu thô tối giản theo yêu cầu
+
+                // 💡 XỬ LÝ ĐỔI MẬT KHẨU THÔNG MINH: Chỉ băm mật khẩu mới nếu Admin nhập vào ô trống ngoài View
+                if (!string.IsNullOrWhiteSpace(NewPassword))
+                {
+                    customer.Password = HashPassword(NewPassword);
+                }
 
                 _context.SaveChanges();
                 TempData["SuccessMessage"] = $"Cập nhật thông tin khách hàng \"{customer.FullName}\" thành công!";
@@ -122,7 +148,7 @@ namespace CMS.Backend.Controllers
             }
         }
 
-        // POST: /Customer/Delete/5 (Xóa khách hàng)
+        // POST: /Customer/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
@@ -136,7 +162,6 @@ namespace CMS.Backend.Controllers
                     return RedirectToAction("Index");
                 }
 
-                // Kiểm tra ràng buộc: Nếu khách hàng đã từng phát sinh đơn hàng, không cho xóa để tránh mồ côi dữ liệu
                 bool hasOrders = _context.Orders.Any(o => o.CustomerId == id);
                 if (hasOrders)
                 {
