@@ -36,13 +36,11 @@ namespace CMS.Backend.Controllers
         [ValidateAntiForgeryToken] // Bảo vệ chống tấn công CSRF
         public IActionResult Create([FromForm] Category model)
         {
-            // DEBUG: In ra tất cả giá trị nhận được từ form
             Console.WriteLine("=== DEBUG FORM DATA ===");
             foreach (var key in Request.Form.Keys)
             {
                 Console.WriteLine($"{key} = {Request.Form[key]}");
             }
-
             Console.WriteLine("=== DEBUG MODELSTATE ===");
             foreach (var key in ModelState.Keys)
             {
@@ -51,12 +49,8 @@ namespace CMS.Backend.Controllers
                     Console.WriteLine($"Field: {key} | Error: {error.ErrorMessage}");
                 }
             }
-
             if (!ModelState.IsValid)
                 return View(model);
-
-
-            // Kiểm tra tên danh mục đã tồn tại chưa
             bool isDuplicate = _context.Categories
                 .Any(c => c.Name.ToLower() == model.Name.ToLower());
 
@@ -65,7 +59,6 @@ namespace CMS.Backend.Controllers
                 ModelState.AddModelError("Name", "Tên danh mục này đã tồn tại trong hệ thống");
                 return View(model);
             }
-
             try
             {
                 _context.Categories.Add(model);

@@ -39,7 +39,6 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
-            @* 💡 ĐÃ BỔ SUNG: enctype="multipart/form-data" để hỗ trợ upload tệp ảnh bài viết *@
             <form asp-action="Create" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
@@ -62,13 +61,12 @@
                     <span asp-validation-for="CategoryId" class="text-danger small"></span>
                 </div>
 
-                @* 💡 ĐÃ THAY ĐỔI: Chuyển đổi từ input nhập link URL sang input chọn file *@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Hình ảnh đại diện bài viết</label>
-                    <input type="file" name="imageFile" class="form-control"
-                           accept="image/*" onchange="previewImage(this)" />
 
-                    {/* Khung hiển thị ảnh xem trước ngay khi chọn file */}
+                    <input type="file" name="imageFile" class="form-control"
+                           data-val="false" accept="image/*" onchange="previewImage(this)" />
+
                     <div id="imagePreview" class="mt-2" style="display:none;">
                         <img id="previewImg" src="" alt="Preview"
                              class="img-thumbnail" style="max-height:160px; object-fit: cover;" />
@@ -79,7 +77,8 @@
                     <label asp-for="Content" class="form-label fw-semibold">
                         Nội dung <span class="text-danger">*</span>
                     </label>
-                    <textarea asp-for="Content" class="form-control"
+                    @* 💡 ĐÃ THAY ĐỔI: Thêm id="editor" để JavaScript cấu hình CKEditor tìm thấy *@
+                    <textarea asp-for="Content" id="editor" class="form-control"
                               rows="8" placeholder="Nhập nội dung bài viết..."></textarea>
                     <span asp-validation-for="Content" class="text-danger small"></span>
                 </div>
@@ -102,8 +101,29 @@
 @section Scripts {
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    @* 1️⃣ Tải thư viện CKEditor 5 Classic từ CDN mạng *@
+    <script src="https://cdn.jsdelivr.net/npm/@@ckeditor/ckeditor5-build-classic@41.0.0/build/ckeditor.js"></script>
+
     <script>
-        // 💡 THUẬT TOÁN: Đọc file ảnh offline và hiển thị preview trực tiếp trên trình duyệt
+        // 2️⃣ Kích hoạt CKEditor cho ô nội dung bài viết bài viết
+        ClassicEditor
+            .create(document.querySelector('#editor'), {
+                placeholder: 'Bắt đầu soạn thảo nội dung bài viết chi tiết tại đây...',
+                toolbar: [
+                    'heading', '|',
+                    'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
+                    'blockQuote', 'insertTable', 'undo', 'redo'
+                ]
+            })
+            .then(editor => {
+                console.log('CKEditor 5 khởi tạo thành công!', editor);
+            })
+            .catch(error => {
+                console.error('Lỗi nạp CKEditor:', error);
+            });
+
+        // Thuật toán xem trước hình ảnh đại diện bài viết bài viết
         function previewImage(input) {
             const preview = document.getElementById('imagePreview');
             const img = document.getElementById('previewImg');
@@ -121,4 +141,18 @@
             }
         }
     </script>
+
+    @* 3️⃣ CSS định hình lại độ cao và bo góc cho CKEditor khớp với Bootstrap 5 *@
+    <style>
+        .ck-editor__editable_inline {
+            min-height: 300px;
+            border-bottom-left-radius: 0.375rem !important;
+            border-bottom-right-radius: 0.375rem !important;
+        }
+
+        .ck-editor__top {
+            border-top-left-radius: 0.375rem !important;
+            border-top-right-radius: 0.375rem !important;
+        }
+    </style>
 }

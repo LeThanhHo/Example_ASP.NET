@@ -27,6 +27,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     });
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
@@ -34,6 +35,8 @@ builder.Services.AddCors(options =>
                         .AllowAnyMethod()
                         .AllowAnyHeader());
 });
+
+builder.Services.AddHttpClient();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -55,6 +58,9 @@ app.UseRouting();
 app.UseCors("AllowReactApp");
 app.UseAuthentication(); // ← Phải có và phải đứng TRƯỚC UseAuthorization
 app.UseAuthorization();
+
+// 💡 ĐÃ BỔ SUNG: Kích hoạt bản đồ ánh xạ cho các API Controller (ChatApiController)
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",

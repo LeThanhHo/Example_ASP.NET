@@ -106,11 +106,11 @@ function PostDetail() {
                 </div>
 
                 {/* 5. Nội dung chi tiết của bài viết */}
-                {/* Sử dụng style whiteSpace: 'pre-line' để tự động xuống dòng đẹp mắt theo đúng dữ liệu nhập từ C# */}
-                <div className="post-content text-dark text-justify"
-                    style={{ fontSize: '16px', lineHeight: '1.8', whiteSpace: 'pre-line', color: '#212529' }}>
-                    {post.content}
-                </div>
+                <div
+                    className="post-content text-dark text-justify content-ckeditor-parsed"
+                    style={{ fontSize: '16px', lineHeight: '1.8', color: '#212529' }}
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                />
 
             </article>
 
@@ -120,6 +120,30 @@ function PostDetail() {
                     <i className="fas fa-arrow-left mr-2"></i> QUAY LẠI TRANG CHỦ
                 </Link>
             </div>
+            <style>{`
+                .content-ckeditor-parsed ol {
+                    list-style-type: decimal !important;
+                    padding-left: 2.5rem !important;
+                    margin-bottom: 1rem !important;
+                }
+                .content-ckeditor-parsed ul {
+                    list-style-type: disc !important;
+                    padding-left: 2.5rem !important;
+                }
+                .content-ckeditor-parsed li {
+                    margin-bottom: 0.4rem !important;
+                }
+                .content-ckeditor-parsed table {
+                    width: 100% !important;
+                    border-collapse: collapse !important;
+                    margin: 1.5rem 0 !important;
+                }
+                .content-ckeditor-parsed table td, 
+                .content-ckeditor-parsed table th {
+                    border: 1px solid #dee2e6 !important;
+                    padding: 8px 12px !important;
+                }
+            `}</style>
 
         </div>
     );

@@ -29,11 +29,12 @@
 
             <hr />
 
-            <p style="line-height: 30px; font-size:18px;">
-                @Model.Content
-            </p>
+            @* 💡 ĐÃ SỬA: Sử dụng Html.Raw để render chuỗi HTML từ CKEditor một cách chuẩn chỉ *@
+            <div style="line-height: 30px; font-size:18px;" class="post-rich-text-content">
+                @Html.Raw(Model.Content)
+            </div>
 
-            <a href="/Post"
+            <a href="/Post/Index"
                class="btn btn-secondary mt-3">
                 ← Quay lại
             </a>

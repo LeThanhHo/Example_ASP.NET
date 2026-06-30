@@ -20,6 +20,7 @@ import RegisterPage from './pages/register/index';
 import CartPage from './pages/cart/index';
 import CustomerProfilePage from './pages/profile';
 import ForgotPasswordPage from './pages/login/ForgotPassword';
+import ChatBoxAI from './components/ChatBoxAI';
 function App() {
     return (
         // Khởi tạo bộ định tuyến bao bọc toàn bộ ứng dụng Web
@@ -76,7 +77,7 @@ function App() {
                         } />
                     </Routes>
                 </main>
-
+                <ChatBoxAI />
                
 
             </div>

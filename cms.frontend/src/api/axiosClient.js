@@ -7,7 +7,7 @@ const axiosClient = axios.create({
     },
 });
 
-// Cấu hình interceptors nếu cần (ví dụ đính kèm Token)
+
 axiosClient.interceptors.request.use((config) => {
     return config;
 }, (error) => {

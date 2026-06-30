@@ -51,8 +51,8 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width:50px">#</th>
-                            <th>Tiêu đề</th>
+                            <th style="width:60px" class="text-center">#</th>
+                            <th>Bài viết</th>
                             <th>Danh mục</th>
                             <th>Ngày tạo</th>
                             <th style="width:170px" class="text-center">Thao tác</th>
@@ -62,37 +62,57 @@
                         @foreach (var item in Model)
                         {
                             <tr>
-                                <td class="text-muted">@item.Id</td>
+                                <td class="text-muted text-center">@item.Id</td>
                                 <td>
-                                    <div class="fw-semibold">@item.Title</div>
-                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
-                                    {
-                                        <small class="text-muted"><i class="bi bi-image me-1"></i>Có ảnh</small>
-                                    }
+                                    <div class="d-flex align-items-center">
+                                        @* 💡 ĐÃ BỔ SUNG: Hiển thị ảnh thumbnail nhỏ trực quan nếu bài viết có ảnh *@
+                                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                        {
+                                            <img src="@item.ImageUrl" alt="Thumbnail"
+                                                 class="rounded me-3 border"
+                                                 style="width: 50px; height: 50px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light rounded me-3 border d-flex align-items-center justify-content-center"
+                                                 style="width: 50px; height: 50px; min-width: 50px;">
+                                                <i class="bi bi-image text-muted fs-4"></i>
+                                            </div>
+                                        }
+                                        <div>
+                                            <div class="fw-bold text-dark">@item.Title</div>
+                                            <small class="text-muted">Mã số: #@item.Id</small>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary">@item.Category?.Name</span>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5 rounded">
+                                        @item.Category?.Name
+                                    </span>
                                 </td>
-                                <td class="text-muted">
-                                    @item.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                                <td class="text-muted" style="font-size: 14px;">
+                                    <i class="bi bi-calendar3 me-1"></i>@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")
                                 </td>
                                 <td class="text-center">
-                                    <a asp-action="Details" asp-route-id="@item.Id"
-                                       class="btn btn-info btn-sm me-1" title="Xem chi tiết">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id"
-                                       class="btn btn-warning btn-sm me-1" title="Chỉnh sửa">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form asp-action="Delete" asp-route-id="@item.Id"
-                                          method="post" class="d-inline"
-                                          onsubmit="return confirm('Bạn có chắc muốn xóa bài viết này không?')">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Xóa">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@item.Id"
+                                           class="btn btn-outline-info btn-sm" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id"
+                                           class="btn btn-outline-warning btn-sm" title="Chỉnh sửa">
+                                            <i class="bi bi-pencil text-dark"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@item.Id"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Bạn có chắc muốn xóa bài viết này không?')">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Xóa"
+                                                    style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
